@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
+import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentCreateBinding
+import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentHomeScreenBinding
 
 
 class CreateFragment : Fragment() {
@@ -15,10 +17,10 @@ class CreateFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView =  inflater.inflate(R.layout.fragment_create, container, false)
+        val binding = FragmentCreateBinding.inflate(inflater,container,false)
         val navController = findNavController();
-        val lobbyButton : Button = rootView.findViewById(R.id.buttonCreateGame)
-        val cancelButton : Button = rootView.findViewById(R.id.buttonCancel)
+        val lobbyButton : Button = binding.buttonCreateGame
+        val cancelButton : Button = binding.buttonCancel
 
         lobbyButton.setOnClickListener{
             navController.navigate(R.id.action_createFragment_to_lobbyFragment)
@@ -28,7 +30,7 @@ class CreateFragment : Fragment() {
             navController.navigate(R.id.action_createFragment_to_homeScreen)
         }
 
-        return rootView
+        return binding.root
     }
     }
 
