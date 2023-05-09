@@ -11,7 +11,11 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
 
     private val name : MutableLiveData<String> = MutableLiveData()
 
+    fun getName() : LiveData<String> = name
 
-
-
+    fun registerGame(name: String, callback: (gameId: Int, token: String) -> Unit) {
+        apiRepository.registerGame(name) { gameId, token ->
+            callback(gameId, token)
+        }
+    }
 }
