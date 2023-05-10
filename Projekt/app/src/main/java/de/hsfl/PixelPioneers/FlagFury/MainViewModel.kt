@@ -10,9 +10,13 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     private val name : MutableLiveData<String> = MutableLiveData()
     private val token : MutableLiveData<String> = MutableLiveData()
     private val gameId : MutableLiveData<Int> = MutableLiveData()
+    private val team : MutableLiveData<Int> = MutableLiveData()
     fun getName() : MutableLiveData<String> = name
     fun getToken() : MutableLiveData<String> = token
     fun getGameId() : MutableLiveData<Int> = gameId
+    fun getTeam() : MutableLiveData<Int> = team
+
+
     fun setName(name: String){
         this.name.value = name
     }
@@ -22,6 +26,9 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     fun setGameId(gameId : Int){
         this.gameId.value = gameId
     }
+    fun setTeam(team : Int){
+        this.team.value = team
+    }
 
     fun registerGame(name: String, callback: (gameId: Int, token: String) -> Unit) {
         apiRepository.registerGame(name) { gameId, token ->
@@ -29,10 +36,8 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
         }
     }
 
-    fun joinGame(gameId: Int, name: String, callback: (gameId: Int, name: String, team: Int, token : String) -> Unit) {
-        apiRepository.joinGame(gameId, name) { gameId, name, team, token ->
-            callback(gameId, token,team,token)
-        }
+    fun joinGame(gameId: Int, name: String, callback: (team: Int, token : String) -> Unit) {
+        apiRepository.joinGame(gameId, name) { team, token -> callback(team, token) }
     }
 
 

@@ -45,7 +45,7 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun joinGame(gameId: Int, name: String, callback: (gameId: Int, name: String, team: Int, token : String) -> Unit) {
+    fun joinGame(gameId: Int, name: String, callback: (team: Int, token : String) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
@@ -61,7 +61,7 @@ class ApiRepository private constructor(private val application: Application) {
                 val team = response.getInt("team")
                 val token = response.getString("token")
                 Log.d("ApiRepository", "Game ID: $gameId, Name: $name, Team: $team, Token: $token")
-                callback(gameId, name, team , token)
+                callback(team , token)
             },
             { error ->
                 Log.e("error", "Fehler")
