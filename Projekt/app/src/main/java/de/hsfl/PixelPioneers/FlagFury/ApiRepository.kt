@@ -34,31 +34,38 @@ class ApiRepository private constructor(private val application: Application) {
             { response ->
                 val gameId = response.getInt("game")
                 val token = response.getString("token")
+                Log.d("ApiRepository", "Game ID: $gameId, Token: $token")
                 callback(gameId, token)
             },
             { error ->
-                Log.e("error", "Daten nicht transferiert")
+                Log.e("error", "Fehler")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
-    fun joinGame(gameId: Int, playerName: String, team: Int, onSuccess: (response: JSONObject) -> Unit, onError: (error: String) -> Unit) {
+
+    fun joinGame(gameId: Int, name: String, callback: (gameId: Int, name: String, team: Int, token : String) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
-        val requestBody = JSONObject().apply {
-            put("game", gameId)
-            put("name", playerName)
-            put("team", team)
+
+        val jsonRequest = JSONObject().apply {
+            put("gameId", gameId)
+            put("name", name)
+            put("team", 0)
         }
 
-        val request: JsonObjectRequest = JsonObjectRequest(Request.Method.POST, url, requestBody,
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                onSuccess(response)
+                val gameId = response.getInt("game")
+                val name = response.getString("name")
+                val team = response.getInt("team")
+                val token = response.getString("token")
+                Log.d("ApiRepository", "Game ID: $gameId, Name: $name, Team: $team, Token: $token")
+                callback(gameId, name, team , token)
             },
             { error ->
-                onError(error.message ?: "Unknown error occurred")
-            }
-        )
+                Log.e("error", "Fehler")
+            })
 
         Volley.newRequestQueue(application).add(request)
     }

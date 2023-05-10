@@ -11,7 +11,6 @@ import androidx.navigation.fragment.findNavController
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentHomeScreenBinding
 
 class HomeScreen : Fragment() {
-    val mainViewModel : MainViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
