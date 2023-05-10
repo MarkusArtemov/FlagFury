@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentCreateBinding
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentLobbyBinding
 
@@ -20,7 +21,7 @@ class LobbyFragment : Fragment() {
         val navController = findNavController()
         val joinGameButton: Button = binding.buttonStart
         val cancelButton: Button = binding.buttonCancel
-
+        val playerList: RecyclerView = binding.recyclerView
 
         joinGameButton.setOnClickListener {
             navController.navigate(R.id.action_lobbyFragment_to_gameFragment)

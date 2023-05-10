@@ -3,6 +3,7 @@ package de.hsfl.PixelPioneers.FlagFury
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import org.json.JSONObject
 
 class MainViewModel(app : Application) : AndroidViewModel(app){
     private val apiRepository = ApiRepository.getInstance(app)
@@ -38,6 +39,10 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
 
     fun joinGame(gameId: Int, name: String, callback: (team: Int, token : String) -> Unit) {
         apiRepository.joinGame(gameId, name) { team, token -> callback(team, token) }
+    }
+
+    fun getPlayers(gameId: Int, name: String, token: String, callback: (players: List<JSONObject>?) -> Unit) {
+        apiRepository.getPlayers(gameId, name, token) { players -> callback(players) }
     }
 
 

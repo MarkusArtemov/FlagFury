@@ -37,8 +37,10 @@ class JoinFragment : Fragment() {
                 mainViewModel.setToken(token)
                 mainViewModel.setGameId(gameIdNumber)
                 mainViewModel.setName(nameInput.text.toString())
-                navController.navigate(R.id.action_joinFragment_to_lobbyFragment)
+
+
             }
+            navController.navigate(R.id.action_joinFragment_to_lobbyFragment)
         }
 
         cancelButton.setOnClickListener {
