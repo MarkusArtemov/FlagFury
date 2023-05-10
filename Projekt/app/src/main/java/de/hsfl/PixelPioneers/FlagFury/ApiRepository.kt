@@ -69,5 +69,36 @@ class ApiRepository private constructor(private val application: Application) {
 
         Volley.newRequestQueue(application).add(request)
     }
+
+    fun getPlayers(gameId: Int, name: String, token: String, callback: (players: List<JSONObject>?) -> Unit) {
+        val url = "https://ctf.letorbi.de/players"
+
+        val jsonRequest = JSONObject().apply {
+            put("game", gameId)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                val playersArray = response.getJSONArray("players")
+                val players = mutableListOf<JSONObject>()
+
+                for (i in 0 until playersArray.length()) {
+                    val player = playersArray.getJSONObject(i)
+                    players.add(player)
+                }
+
+                callback(players)
+            },
+            { error ->
+                Log.e("error", "Fehler")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+    }
+
 }
 
