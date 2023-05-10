@@ -8,19 +8,21 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentCreateBinding
+import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
 
 class GameFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.fragment_game, container, false)
+        val binding = FragmentGameBinding.inflate(inflater,container,false)
         val navController = findNavController()
-        val leaveButton: Button = rootView.findViewById(R.id.button)
+        val leaveButton: Button = binding.button
 
         leaveButton.setOnClickListener {
             navController.navigate(R.id.action_gameFragment_to_homeScreen)
         }
-        return rootView;
+        return binding.root;
     }
 }
