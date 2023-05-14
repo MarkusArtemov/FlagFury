@@ -22,7 +22,7 @@ class ApiRepository private constructor(private val application: Application) {
         }
     }
 
-    fun registerGame(name: String, callback: (gameId: Int, token: String) -> Unit) {
+    fun registerGame(name: String, callback: (gameId: String, token: String) -> Unit) {
         val url = "https://ctf.letorbi.de/game/register"
 
         val jsonRequest = JSONObject().apply {
@@ -32,7 +32,7 @@ class ApiRepository private constructor(private val application: Application) {
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val gameId = response.getInt("game")
+                val gameId = response.getString("game")
                 val token = response.getString("token")
                 Log.d("ApiRepository", "Game ID: $gameId, Token: $token")
                 callback(gameId, token)
@@ -45,22 +45,22 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun joinGame(gameId: Int, name: String, callback: (team: Int, token : String) -> Unit) {
+    fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
-            put("gameId", gameId)
+            put("game", game)
             put("name", name)
             put("team", 0)
         }
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val gameId = response.getInt("game")
+                val game = response.getString("game")
                 val name = response.getString("name")
                 val team = response.getInt("team")
                 val token = response.getString("token")
-                Log.d("ApiRepository", "Game ID: $gameId, Name: $name, Team: $team, Token: $token")
+                Log.d("ApiRepository", "Game ID: $game, Name: $name, Team: $team, Token: $token")
                 callback(team , token)
             },
             { error ->
@@ -69,5 +69,30 @@ class ApiRepository private constructor(private val application: Application) {
 
         Volley.newRequestQueue(application).add(request)
     }
+
+
+    fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit) {
+        val url = "https://ctf.letorbi.de/players"
+
+        val jsonRequest = JSONObject().apply {
+            put("game", game)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                val information = response
+                Log.d("ApiRepository", "Players: $information")
+                callback(information)
+            },
+            { error ->
+                Log.e("error", "Richtiger Fehler")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+    }
+
 }
 

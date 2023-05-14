@@ -2,6 +2,7 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -30,14 +31,18 @@ class JoinFragment : Fragment() {
 
 
         joinGameButton.setOnClickListener {
-            val gameIdText = gameId.text.toString()
-            val gameIdNumber = gameIdText.toInt()
-            mainViewModel.joinGame(gameIdNumber, nameInput.text.toString()) { team, token ->
+            mainViewModel.joinGame(gameId.text.toString(), nameInput.text.toString()) { team, token ->
                 mainViewModel.setTeam(team)
                 mainViewModel.setToken(token)
-                mainViewModel.setGameId(gameIdNumber)
+                mainViewModel.setGameId(gameId.text.toString())
                 mainViewModel.setName(nameInput.text.toString())
                 navController.navigate(R.id.action_joinFragment_to_lobbyFragment)
+            }
+            mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken()){
+                response->
+                if(response != null){
+                    Log.d("erfolg","voller Erfolg")
+                }
             }
         }
 

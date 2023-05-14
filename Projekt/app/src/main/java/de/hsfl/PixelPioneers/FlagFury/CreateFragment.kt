@@ -34,7 +34,6 @@ class CreateFragment : Fragment() {
                 }
             }
 
-
         cancelButton.setOnClickListener{
             navController.navigate(R.id.action_createFragment_to_homeScreen)
         }
