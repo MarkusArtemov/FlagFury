@@ -57,11 +57,4 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
             callback(players)
         }, errorCallback)
     }
-
-    fun getPlayers(gameId: Int, name: String, token: String, callback: (players: List<JSONObject>?) -> Unit) {
-        apiRepository.getPlayers(gameId, name, token) { players -> callback(players) }
-    }
-
-
-
 }
