@@ -72,7 +72,7 @@ class ApiRepository private constructor(private val application: Application) {
 
 
     fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit) {
-        val url = "https://ctf.letorbi.de/players"
+        val url = "https://ctf.letorbi.de/players?"
 
         val jsonRequest = JSONObject().apply {
             put("game", game)
@@ -83,9 +83,8 @@ class ApiRepository private constructor(private val application: Application) {
         }
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val information = response
-                Log.d("ApiRepository", "Players: $information")
-                callback(information)
+                Log.d("ApiRepository", "Players: $response")
+                callback(response)
             },
             { error ->
                 Log.e("error", "Richtiger Fehler")

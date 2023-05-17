@@ -32,13 +32,17 @@ class LobbyFragment : Fragment() {
         val navController = findNavController()
         val joinGameButton: Button = binding.buttonStart
         val cancelButton: Button = binding.buttonCancel
+        binding.textViewGameId.text = buildString {
+        append("Game ID: ")
+        append(mainViewModel.getGameId())
+    }
 
         playerAdapter = PlayerAdapter(emptyList())
 
         val recyclerView: RecyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = playerAdapter
-        binding.textViewGameId.text = "Game ID: "+ mainViewModel.getGameId()
+
 
         joinGameButton.setOnClickListener {
             navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
@@ -53,7 +57,6 @@ class LobbyFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("Lobbyfragment","update")
         startPeriodicUpdate()
     }
 
@@ -63,7 +66,6 @@ class LobbyFragment : Fragment() {
     }
 
     private fun startPeriodicUpdate() {
-        Log.d("Läuft", "Läuft eigentlich")
         handler.postDelayed({
             mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken()) { players ->
                 players?.let {

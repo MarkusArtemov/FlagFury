@@ -38,12 +38,6 @@ class JoinFragment : Fragment() {
                 mainViewModel.setName(nameInput.text.toString())
                 navController.navigate(R.id.action_joinFragment_to_lobbyFragment)
             }
-            mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken()){
-                response->
-                if(response != null){
-                    Log.d("erfolg","voller Erfolg")
-                }
-            }
         }
 
         cancelButton.setOnClickListener {

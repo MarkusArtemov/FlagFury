@@ -33,9 +33,15 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
         fun bind(player: JSONObject) {
             val name = player.getString("name")
             val team = player.getInt("team")
+            val bluetoothStatus = player.getString("addr")
 
             binding.name.text = name
             binding.team.text = team.toString()
+           if (bluetoothStatus != null && bluetoothStatus!="null") {
+               binding.bluetoothStatus.setImageResource(android.R.drawable.btn_star_big_on)
+            }
+
+
         }
     }
 }
