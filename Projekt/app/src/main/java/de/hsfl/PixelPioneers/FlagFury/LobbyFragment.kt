@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -67,16 +68,23 @@ class LobbyFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken()) { players ->
+            mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken(), { players ->
                 players?.let {
                     val playerList = it.getJSONArray("players")
                     val convertedList = jsonArrayToList(playerList)
                     playerAdapter.updateList(convertedList)
                 }
-            }
+            }, { error ->
+                error?.let { showErrorToast(it) }
+            })
             startPeriodicUpdate()
         }, updateInterval)
     }
+
+    private fun showErrorToast(error : String) {
+        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+    }
+
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)

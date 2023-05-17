@@ -38,19 +38,24 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
         this.team.value = team
     }
 
-    fun registerGame(name: String, callback: (game :String, token : String) -> Unit) {
-        apiRepository.registerGame(name) { gameId, token ->
+    fun registerGame(name: String, callback: (game: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
+        apiRepository.registerGame(name, { gameId, token ->
             callback(gameId, token)
-        }
+        }, errorCallback)
     }
 
-    fun joinGame(gameId: String, name: String, callback: (team: Int, token : String) -> Unit) {
-        apiRepository.joinGame(gameId, name) { team, token -> callback(team, token) }
+    fun joinGame(gameId: String, name: String, callback: (team: Int, token : String) -> Unit, errorCallback: (error: String?) -> Unit) {
+
+            apiRepository.joinGame(gameId, name, { team, token ->
+                callback(team, token)
+            }, errorCallback)
     }
 
 
-    fun getPlayers(gameId: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit) {
-        apiRepository.getPlayers(gameId, name, token) { players -> callback(players) }
+    fun getPlayers(gameId: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit, errorCallback: (error: String?) -> Unit) {
+        apiRepository.getPlayers(gameId, name, token, { players ->
+            callback(players)
+        }, errorCallback)
     }
 
 

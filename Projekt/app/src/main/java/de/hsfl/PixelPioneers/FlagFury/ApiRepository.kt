@@ -2,6 +2,8 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -22,7 +24,7 @@ class ApiRepository private constructor(private val application: Application) {
         }
     }
 
-    fun registerGame(name: String, callback: (gameId: String, token: String) -> Unit) {
+    fun registerGame(name: String, callback: (gameId: String, token: String) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/register"
 
         val jsonRequest = JSONObject().apply {
@@ -38,14 +40,14 @@ class ApiRepository private constructor(private val application: Application) {
                 callback(gameId, token)
             },
             { error ->
-                Log.e("error", "Fehler")
+                errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
 
-    fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit) {
+    fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
@@ -64,14 +66,14 @@ class ApiRepository private constructor(private val application: Application) {
                 callback(team , token)
             },
             { error ->
-                Log.e("error", "Fehler")
+                errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
 
-    fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit) {
+    fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/players?"
 
         val jsonRequest = JSONObject().apply {
@@ -87,7 +89,7 @@ class ApiRepository private constructor(private val application: Application) {
                 callback(response)
             },
             { error ->
-                Log.e("error", "Richtiger Fehler")
+                    errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)

@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentCreateBinding
@@ -28,22 +29,30 @@ class JoinFragment : Fragment() {
         val cancelButton: Button = binding.buttonJoinCancel
         val gameId: EditText = binding.editTextGameId
         val nameInput: EditText = binding.editTextJoinName
-
-
         joinGameButton.setOnClickListener {
-            mainViewModel.joinGame(gameId.text.toString(), nameInput.text.toString()) { team, token ->
+            mainViewModel.joinGame(gameId.text.toString(), nameInput.text.toString(), { team, token ->
                 mainViewModel.setTeam(team)
                 mainViewModel.setToken(token)
                 mainViewModel.setGameId(gameId.text.toString())
                 mainViewModel.setName(nameInput.text.toString())
                 navController.navigate(R.id.action_joinFragment_to_lobbyFragment)
-            }
+            }, { error ->
+                error?.let { error -> showErrorToast(error) }
+            })
         }
+
+
+
 
         cancelButton.setOnClickListener {
             navController.navigate(R.id.action_joinFragment_to_homeScreen)
         }
 
         return binding.root
+    }
+
+
+    private fun showErrorToast(error : String) {
+        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
     }
 }
