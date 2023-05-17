@@ -2,6 +2,8 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -22,7 +24,7 @@ class ApiRepository private constructor(private val application: Application) {
         }
     }
 
-    fun registerGame(name: String, callback: (gameId: Int, token: String) -> Unit) {
+    fun registerGame(name: String, callback: (gameId: String, token: String) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/register"
 
         val jsonRequest = JSONObject().apply {
@@ -32,69 +34,62 @@ class ApiRepository private constructor(private val application: Application) {
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val gameId = response.getInt("game")
+                val gameId = response.getString("game")
                 val token = response.getString("token")
                 Log.d("ApiRepository", "Game ID: $gameId, Token: $token")
                 callback(gameId, token)
             },
             { error ->
-                Log.e("error", "Fehler")
+                errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
 
-    fun joinGame(gameId: Int, name: String, callback: (team: Int, token : String) -> Unit) {
+    fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
-            put("gameId", gameId)
+            put("game", game)
             put("name", name)
             put("team", 0)
         }
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val gameId = response.getInt("game")
+                val game = response.getString("game")
                 val name = response.getString("name")
                 val team = response.getInt("team")
                 val token = response.getString("token")
-                Log.d("ApiRepository", "Game ID: $gameId, Name: $name, Team: $team, Token: $token")
+                Log.d("ApiRepository", "Game ID: $game, Name: $name, Team: $team, Token: $token")
                 callback(team , token)
             },
             { error ->
-                Log.e("error", "Fehler")
+                errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
-    fun getPlayers(gameId: Int, name: String, token: String, callback: (players: List<JSONObject>?) -> Unit) {
-        val url = "https://ctf.letorbi.de/players"
+
+    fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit,errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/players?"
 
         val jsonRequest = JSONObject().apply {
-            put("game", gameId)
+            put("game", game)
             put("auth", JSONObject().apply {
                 put("name", name)
                 put("token", token)
             })
         }
-
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val playersArray = response.getJSONArray("players")
-                val players = mutableListOf<JSONObject>()
-
-                for (i in 0 until playersArray.length()) {
-                    val player = playersArray.getJSONObject(i)
-                    players.add(player)
-                }
-
-                callback(players)
+                Log.d("ApiRepository", "Players: $response")
+                callback(response)
             },
             { error ->
-                Log.e("error", "Fehler")
+                    errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)

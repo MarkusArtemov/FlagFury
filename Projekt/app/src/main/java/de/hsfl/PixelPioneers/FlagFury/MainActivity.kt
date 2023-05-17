@@ -8,7 +8,7 @@ import androidx.activity.viewModels
 import androidx.fragment.app.activityViewModels
 
 class MainActivity : AppCompatActivity() {
-//    val mainViewModel : MainViewModel by viewModels()
+    val mainViewModel : MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
