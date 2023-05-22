@@ -13,6 +13,7 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     private val gameId : MutableLiveData<String> = MutableLiveData()
     private val team : MutableLiveData<Int> = MutableLiveData()
     private val players : MutableLiveData<JSONObject> = MutableLiveData()
+    var permissionChecked = false
 
 
     fun getName() : String? = name.value
@@ -20,6 +21,7 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     fun getGameId() : String? = gameId.value
     fun getTeam() : Int? = team.value
     fun getPlayers() : JSONObject? = players.value
+
 
 
     fun setName(name: String){
