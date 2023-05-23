@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".GameFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -21,17 +20,27 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView"
+            app:layout_constraintTop_toBottomOf="@+id/campusCard"
             app:layout_constraintVertical_bias="0.105" />
 
         <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="425dp"
-            android:layout_height="346dp"
-            android:layout_marginTop="120dp"
+            android:id="@+id/campusCard"
+            android:layout_width="400dp"
+            android:layout_height="350dp"
+            android:layout_marginTop="152dp"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/campuskarte"
-            tools:layout_editor_absoluteX="-14dp" />
+            tools:layout_editor_absoluteX="5dp"
+            tools:ignore="MissingConstraints" />
+
+        <ImageView
+            android:id="@+id/target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_mylocation"
+            tools:layout_editor_absoluteX="218dp"
+            tools:layout_editor_absoluteY="92dp" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

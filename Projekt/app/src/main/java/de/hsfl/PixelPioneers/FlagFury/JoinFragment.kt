@@ -41,9 +41,6 @@ class JoinFragment : Fragment() {
             })
         }
 
-
-
-
         cancelButton.setOnClickListener {
             navController.navigate(R.id.action_joinFragment_to_homeScreen)
         }
