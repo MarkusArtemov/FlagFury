@@ -14,8 +14,8 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     private val gameId : MutableLiveData<String> = MutableLiveData()
     private val team : MutableLiveData<Int> = MutableLiveData()
     private val players : MutableLiveData<JSONObject> = MutableLiveData()
-    val currentPosition: MutableLiveData<Location> = MutableLiveData()
-    val markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+    private val currentPosition: MutableLiveData<Location> = MutableLiveData()
+    private val markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
 
 
 
@@ -47,6 +47,9 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     }
     fun setMarkerPosition(markerPosition : Pair<Double, Double>){
         this.markerPosition.value = markerPosition
+    }
+    fun setCurrentPosition(currentPosition : Location){
+        this.currentPosition.value = currentPosition
     }
 
     fun registerGame(name: String, callback: (game: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {

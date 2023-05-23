@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
         override fun onLocationResult(p0: LocationResult) {
             super.onLocationResult(p0)
             for (location in p0.locations){
-                Log.d("de.hsfl.PixelPioneers.FlagFury.MainActivity", "gps position : $location")
-                mainViewModel.currentPosition.value = location
+                mainViewModel.setCurrentPosition(location)
+                Log.d("ulubum","${mainViewModel.getCurrentPosition()}")
             }
         }
     }
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         requestLocationUpdates()
     }
 
-    public fun requestLocationUpdates() {
+    fun requestLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             client.requestLocationUpdates(request, callback, Looper.getMainLooper())
         } else {

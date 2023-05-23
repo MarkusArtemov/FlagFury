@@ -19,9 +19,10 @@
             android:text="Leave"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/campusCard"
-            app:layout_constraintVertical_bias="0.105" />
+            app:layout_constraintVertical_bias="0.0" />
 
         <ImageView
             android:id="@+id/campusCard"
@@ -39,7 +40,11 @@
             android:layout_height="wrap_content"
             android:src="@android:drawable/ic_menu_mylocation"
             tools:layout_editor_absoluteX="218dp"
-            tools:layout_editor_absoluteY="92dp" />
+            tools:layout_editor_absoluteY="92dp"
+            app:layout_constraintStart_toStartOf="@id/campusCard"
+            app:layout_constraintTop_toTopOf="@id/campusCard"
+            app:layout_constraintEnd_toEndOf="@id/campusCard"
+            app:layout_constraintBottom_toBottomOf="@id/campusCard"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

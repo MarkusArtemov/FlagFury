@@ -2,25 +2,29 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.location.Location
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import de.hsfl.PixelPioneers.FlagFury.MainActivity
 import de.hsfl.PixelPioneers.FlagFury.MainViewModel
+import de.hsfl.PixelPioneers.FlagFury.R
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
 
 class GameFragment : Fragment() {
     private lateinit var binding: FragmentGameBinding
-    private val mainViewModel: MainViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
-    private lateinit var currentPositionObserver: Observer<Location>
-    private lateinit var markerPositionObserver: Observer<Pair<Double, Double>>
+    private val updateInterval: Long = 1000
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,31 +45,39 @@ class GameFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        currentPositionObserver = Observer { location ->
-            val mapImageWidth = binding.campusCard.width
-            val mapImageHeight = binding.campusCard.height
-            updateMarkerPosition(location, mapImageWidth, mapImageHeight)
-        }
-
-        markerPositionObserver = Observer { markerPosition ->
-            binding.target.x = markerPosition.first.toFloat()
-            Log.d("GameFragment",binding.target.x.toString())
-            binding.target.y = markerPosition.second.toFloat()
-            Log.d("GameFragment",binding.target.y.toString())
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mainViewModel.currentPosition.observe(viewLifecycleOwner, currentPositionObserver)
-        mainViewModel.markerPosition.observe(viewLifecycleOwner, markerPositionObserver)
-        (requireActivity() as MainActivity).requestLocationUpdates()
+        startPeriodicUpdate()
     }
 
     override fun onPause() {
         super.onPause()
-        mainViewModel.currentPosition.removeObserver(currentPositionObserver)
-        mainViewModel.markerPosition.removeObserver(markerPositionObserver)
+        stopPeriodicUpdate()
+        Log.d("de.hsfl.PixelPioneers.FlagFury.GameFragment", "Periodic updates paused")
+    }
+
+    private fun startPeriodicUpdate() {
+        handler.postDelayed({
+            var location = mainViewModel.getCurrentPosition()
+            if(location!=null){
+                val mapImageWidth = binding.campusCard.width
+                val mapImageHeight = binding.campusCard.height
+                updateMarkerPosition(location, mapImageWidth, mapImageHeight)
+                Log.d("de.hsfl.PixelPioneers.FlagFury.GameFragment", "Current position updated: $location")
+            }
+
+            val markerPosition = mainViewModel.getMarkerPosition()
+            if (markerPosition != null) {
+                val mapImageWidth = binding.campusCard.width
+                val mapImageHeight = binding.campusCard.height
+                updateMarkerViewPosition(markerPosition, mapImageWidth, mapImageHeight)
+                Log.d("de.hsfl.PixelPioneers.FlagFury.GameFragment", "Marker position updated: $markerPosition")
+            }
+
+            startPeriodicUpdate()
+        }, updateInterval)
+    }
+
+    private fun stopPeriodicUpdate() {
+        handler.removeCallbacksAndMessages(null)
     }
 
     private fun updateMarkerPosition(location: Location, mapImageWidth: Int, mapImageHeight: Int) {
@@ -77,10 +89,29 @@ class GameFragment : Fragment() {
         val posX = (location.longitude - tlLongitude) / (brLongitude - tlLongitude)
         val posY = (location.latitude - tlLatitude) / (brLatitude - tlLatitude)
 
-        val markerPosX = posX * mapImageWidth
-        val markerPosY = posY * mapImageHeight
+        Log.d("posX", "$posX")
+        Log.d("posY", "$posY")
 
-        val markerPosition = Pair(markerPosX, markerPosY)
+        val markerPosition = Pair(posX, posY)
         mainViewModel.setMarkerPosition(markerPosition)
     }
+
+    private fun updateMarkerViewPosition(markerPosition: Pair<Double, Double>, mapImageWidth: Int, mapImageHeight: Int) {
+        val markerPosX = markerPosition.first
+        val markerPosY = markerPosition.second
+
+        val markerViewWidth = binding.target.width
+        val markerViewHeight = binding.target.height
+        Log.d("gameY", "$mapImageHeight")
+        Log.d("gameY", "$mapImageWidth")
+        val adjustedMarkerPosX = markerPosX * mapImageWidth - markerViewWidth / 2
+        val adjustedMarkerPosY = markerPosY * mapImageHeight - markerViewHeight / 2
+
+        binding.target.x = adjustedMarkerPosX.toFloat()
+        binding.target.y = adjustedMarkerPosY.toFloat()
+
+        Log.d("de.hsfl.PixelPioneers.FlagFury.GameFragment", "Marker view position updated: ($adjustedMarkerPosX, $adjustedMarkerPosY)")
+    }
+
+
 }
