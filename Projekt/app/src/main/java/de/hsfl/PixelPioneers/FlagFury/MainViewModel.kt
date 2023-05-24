@@ -16,6 +16,8 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     private val players : MutableLiveData<JSONObject> = MutableLiveData()
     private val currentPosition: MutableLiveData<Location> = MutableLiveData()
     private val markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+    private val conquestPoints: MutableList<Pair<Double, Double>> = mutableListOf()
+
 
 
 
@@ -27,7 +29,7 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     fun getMarkerPosition(): Pair<Double, Double>? = markerPosition.value
     fun getCurrentPosition() : Location? = currentPosition.value
 
-
+    fun getConquestPoints(): MutableList<Pair<Double, Double>> = conquestPoints
 
 
     fun setName(name: String){
@@ -51,9 +53,17 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     fun setCurrentPosition(currentPosition : Location){
         this.currentPosition.value = currentPosition
     }
+    fun setConquestPoint(latitude: Double, longitude: Double) {
+        val point = Pair(latitude, longitude)
+        conquestPoints.add(point)
+    }
 
-    fun registerGame(name: String, callback: (game: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
-        apiRepository.registerGame(name, { gameId, token ->
+
+
+    fun registerGame(name: String, points: List<Pair<Double, Double>>, callback: (gameId: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
+        apiRepository.registerGame(name, points, { gameId, token ->
+            setGameId(gameId)
+            setToken(token)
             callback(gameId, token)
         }, errorCallback)
     }

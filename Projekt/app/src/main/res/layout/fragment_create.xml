@@ -13,11 +13,11 @@
         tools:context=".CreateActivity">
 
         <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="400dp"
-            android:layout_height="350dp"
-            android:layout_marginTop="16dp"
+            android:id="@+id/campusCard"
+            android:layout_width="408dp"
+            android:layout_height="457dp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/campuskarte" />
@@ -26,15 +26,27 @@
             android:id="@+id/editTextName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="Enter Name"
             android:inputType="textPersonName"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView2" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.689" />
+
+        <ImageView
+            android:id="@+id/target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:src="@android:drawable/ic_menu_mylocation"
+            app:layout_constraintStart_toStartOf="@id/campusCard"
+            app:layout_constraintTop_toTopOf="@id/campusCard"
+            app:layout_constraintEnd_toEndOf="@id/campusCard"
+            app:layout_constraintBottom_toBottomOf="@id/campusCard"/>
 
         <Button
             android:id="@+id/buttonFlagPosition"

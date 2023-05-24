@@ -24,12 +24,20 @@ class ApiRepository private constructor(private val application: Application) {
         }
     }
 
-    fun registerGame(name: String, callback: (gameId: String, token: String) -> Unit,errorCallback: (error: String?) -> Unit) {
+    fun registerGame(name: String, points: List<Pair<Double, Double>>, callback: (gameId: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/register"
+
+        val jsonArray = JSONArray()
+        for (point in points) {
+            val jsonObject = JSONObject()
+            jsonObject.put("latitude", point.first)
+            jsonObject.put("longitude", point.second)
+            jsonArray.put(jsonObject)
+        }
 
         val jsonRequest = JSONObject().apply {
             put("name", name)
-            put("points", JSONArray())
+            put("points", jsonArray)
         }
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
@@ -45,6 +53,7 @@ class ApiRepository private constructor(private val application: Application) {
 
         Volley.newRequestQueue(application).add(request)
     }
+
 
 
     fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit,errorCallback: (error: String?) -> Unit) {
@@ -94,6 +103,42 @@ class ApiRepository private constructor(private val application: Application) {
 
         Volley.newRequestQueue(application).add(request)
     }
+
+
+    fun getPoints(game: Int, name: String, token: String, callback: (points: List<Point>?) -> Unit, errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/points"
+
+        val jsonRequest = JSONObject().apply {
+            put("game", game)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                val pointsJsonArray = response.getJSONArray("points")
+                val points = mutableListOf<Point>()
+                for (i in 0 until pointsJsonArray.length()) {
+                    val pointObject = pointsJsonArray.getJSONObject(i)
+                    val id = pointObject.getInt("id")
+                    val team = pointObject.getInt("team")
+                    val lat = pointObject.getDouble("lat")
+                    val long = pointObject.getDouble("long")
+                    val point = Point(id, team, lat, long)
+                    points.add(point)
+                }
+                callback(points)
+            },
+            { error ->
+                errorCallback("Fehler beim Abrufen der Eroberungspunkte")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+    }
+
+
 
 }
 
