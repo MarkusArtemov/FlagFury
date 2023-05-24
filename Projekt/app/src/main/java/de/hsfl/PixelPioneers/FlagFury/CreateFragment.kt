@@ -6,56 +6,59 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentCreateBinding
 
-
 class CreateFragment : Fragment() {
-    private val mainViewModel : MainViewModel by activityViewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var binding: FragmentCreateBinding
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
+
     @SuppressLint("SuspiciousIndentation")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = FragmentCreateBinding.inflate(inflater,container,false)
-        val navController = findNavController();
-        val lobbyButton : Button = binding.buttonCreateGame
-        val cancelButton : Button = binding.buttonCancel
-        val setFlagButton : Button = binding.buttonFlagPosition
-        val name : EditText = binding.editTextName
-        val pointsList = mainViewModel.getConquestPoints()
+        binding = FragmentCreateBinding.inflate(inflater, container, false)
+        val navController = findNavController()
+        val lobbyButton: Button = binding.buttonCreateGame
+        val cancelButton: Button = binding.buttonCancel
+        val setFlagButton: Button = binding.buttonFlagPosition
+        val name: EditText = binding.editTextName
 
         lobbyButton.setOnClickListener {
-            mainViewModel.registerGame(name.text.toString(), mainViewModel.getConquestPoints() , { gameId, token ->
-                mainViewModel.setGameId(gameId)
-                mainViewModel.setToken(token)
-                mainViewModel.setName(name.text.toString())
-                navController.navigate(R.id.action_createFragment_to_lobbyFragment)
-            }, { error ->
-                error?.let { showErrorToast(it) }
-            })
+            mainViewModel.registerGame(
+                name.text.toString(),
+                mainViewModel.getConquestPoints(),
+                { gameId, token ->
+                    mainViewModel.setGameId(gameId)
+                    mainViewModel.setToken(token)
+                    mainViewModel.setName(name.text.toString())
+                    navController.navigate(R.id.action_createFragment_to_lobbyFragment)
+                },
+                { error ->
+                    error?.let { showErrorToast(it) }
+                }
+            )
         }
 
-
-
-        setFlagButton.setOnClickListener{
-            startPeriodicUpdate()
-        }
-
-
-        cancelButton.setOnClickListener{
+        cancelButton.setOnClickListener {
             navController.navigate(R.id.action_createFragment_to_homeScreen)
+        }
+
+        setFlagButton.setOnClickListener {
+            createFlagMarker()
         }
 
         return binding.root
@@ -63,6 +66,7 @@ class CreateFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        startPeriodicUpdate()
     }
 
     override fun onPause() {
@@ -110,7 +114,11 @@ class CreateFragment : Fragment() {
         mainViewModel.setMarkerPosition(markerPosition)
     }
 
-    private fun updateMarkerViewPosition(markerPosition: Pair<Double, Double>, mapImageWidth: Int, mapImageHeight: Int) {
+    private fun updateMarkerViewPosition(
+        markerPosition: Pair<Double, Double>,
+        mapImageWidth: Int,
+        mapImageHeight: Int
+    ) {
         val markerPosX = markerPosition.first
         val markerPosY = markerPosition.second
 
@@ -123,13 +131,54 @@ class CreateFragment : Fragment() {
         binding.target.x = adjustedMarkerPosX.toFloat()
         binding.target.y = adjustedMarkerPosY.toFloat()
 
-        Log.d("de.hsfl.PixelPioneers.FlagFury.CreateFragment", "Marker view position updated: ($adjustedMarkerPosX, $adjustedMarkerPosY)")
+        Log.d(
+            "de.hsfl.PixelPioneers.FlagFury.CreateFragment",
+            "Marker view position updated: ($adjustedMarkerPosX, $adjustedMarkerPosY)"
+        )
     }
 
-
-    private fun showErrorToast(error : String) {
+    private fun showErrorToast(error: String) {
         Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
     }
+
+    private fun createFlagMarker() {
+        val markerPosition = mainViewModel.getMarkerPosition()
+        if (markerPosition != null) {
+            val flagMarker = ImageView(requireContext())
+            flagMarker.id = View.generateViewId()
+            flagMarker.setImageResource(R.drawable.circle)
+            flagMarker.layoutParams = ViewGroup.LayoutParams(20, 20)
+
+            val mapImageWidth = binding.campusCard.width
+            val mapImageHeight = binding.campusCard.height
+
+            val markerPosX = markerPosition.first
+            val markerPosY = markerPosition.second
+
+            val adjustedMarkerPosX = markerPosX * mapImageWidth
+            val adjustedMarkerPosY = markerPosY * mapImageHeight
+
+            binding.constraintLayout.addView(flagMarker)
+
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(binding.constraintLayout)
+
+            constraintSet.connect(
+                flagMarker.id,
+                ConstraintSet.START,
+                binding.campusCard.id,
+                ConstraintSet.START,
+                adjustedMarkerPosX.toInt()
+            )
+            constraintSet.connect(
+                flagMarker.id,
+                ConstraintSet.TOP,
+                binding.campusCard.id,
+                ConstraintSet.TOP,
+                adjustedMarkerPosY.toInt()
+            )
+
+            constraintSet.applyTo(binding.constraintLayout)
+        }
     }
-
-
+}

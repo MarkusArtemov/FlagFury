@@ -2,10 +2,7 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
 import com.android.volley.Request
-import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
@@ -105,8 +102,8 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun getPoints(game: Int, name: String, token: String, callback: (points: List<Point>?) -> Unit, errorCallback: (error: String?) -> Unit) {
-        val url = "https://ctf.letorbi.de/points"
+    fun getPoints(game: String, name: String, token: String, callback: (points: List<Point>?) -> Unit, errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/points?simulation"
 
         val jsonRequest = JSONObject().apply {
             put("game", game)
@@ -122,7 +119,7 @@ class ApiRepository private constructor(private val application: Application) {
                 val points = mutableListOf<Point>()
                 for (i in 0 until pointsJsonArray.length()) {
                     val pointObject = pointsJsonArray.getJSONObject(i)
-                    val id = pointObject.getInt("id")
+                    val id = pointObject.getString("id")
                     val team = pointObject.getInt("team")
                     val lat = pointObject.getDouble("lat")
                     val long = pointObject.getDouble("long")

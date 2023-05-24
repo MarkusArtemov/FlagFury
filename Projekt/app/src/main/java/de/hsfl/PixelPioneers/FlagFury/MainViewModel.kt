@@ -83,5 +83,15 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
     }
 
 
+    fun getPoints(gameId: String, name: String, token: String, callback: (points: List<Point>?) -> Unit, errorCallback: (error: String?) -> Unit) {
+        apiRepository.getPoints(gameId, name, token, { points ->
+            callback(points)
+        }, errorCallback)
+    }
+
+    fun addPointToList(markerPosition: Pair<Double, Double>) {
+        conquestPoints.add(markerPosition)
+    }
+
 
 }
