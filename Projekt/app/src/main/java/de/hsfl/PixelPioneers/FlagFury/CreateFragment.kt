@@ -1,7 +1,5 @@
 package de.hsfl.PixelPioneers.FlagFury
 
-import android.annotation.SuppressLint
-import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,8 +22,8 @@ class CreateFragment : Fragment() {
     private lateinit var binding: FragmentCreateBinding
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
+    private val conquestPoints: MutableList<Pair<Double, Double>> = mutableListOf()
 
-    @SuppressLint("SuspiciousIndentation")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,7 +38,7 @@ class CreateFragment : Fragment() {
         lobbyButton.setOnClickListener {
             mainViewModel.registerGame(
                 name.text.toString(),
-                mainViewModel.getConquestPoints(),
+                conquestPoints,
                 { gameId, token ->
                     mainViewModel.setGameId(gameId)
                     mainViewModel.setToken(token)
@@ -58,7 +56,7 @@ class CreateFragment : Fragment() {
         }
 
         setFlagButton.setOnClickListener {
-            createFlagMarker()
+            addFlagMarker(mainViewModel.getCurrentPosition(), mainViewModel.getMarkerPosition())
         }
 
         return binding.root
@@ -75,21 +73,24 @@ class CreateFragment : Fragment() {
         Log.d("de.hsfl.PixelPioneers.FlagFury.CreateFragment", "Periodic updates paused")
     }
 
+
+    private fun updateLocationMarker(){
+        var location = mainViewModel.getCurrentPosition()
+        location?.let {
+            updateMarkerPosition(Pair(location.first, location.second))
+            Log.d("Locationvergleich create", " longi : ${location.first} lati : ${location.second}")
+            val markerPosition = mainViewModel.getMarkerPosition()
+            Log.d("MarkerPositiooon","$markerPosition")
+            val mapImageWidth = binding.campusCard.width
+            val mapImageHeight = binding.campusCard.height
+            markerPosition?.let { it1 -> updateMarkerViewPosition(it1, mapImageWidth, mapImageHeight) }
+            binding.target.visibility = View.VISIBLE
+        }
+    }
+
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            val location = mainViewModel.getCurrentPosition()
-            if (location != null) {
-                updateMarkerPosition(location)
-            }
-
-            val markerPosition = mainViewModel.getMarkerPosition()
-            if (markerPosition != null) {
-                val mapImageWidth = binding.campusCard.width
-                val mapImageHeight = binding.campusCard.height
-                updateMarkerViewPosition(markerPosition, mapImageWidth, mapImageHeight)
-                binding.target.visibility = View.VISIBLE
-            }
-
+            updateLocationMarker()
             startPeriodicUpdate()
         }, updateInterval)
     }
@@ -98,17 +99,14 @@ class CreateFragment : Fragment() {
         handler.removeCallbacksAndMessages(null)
     }
 
-    private fun updateMarkerPosition(location: Location) {
+    private fun updateMarkerPosition(location: Pair<Double, Double>) {
         val tlLatitude = 54.778514
         val tlLongitude = 9.442749
         val brLatitude = 54.769009
         val brLongitude = 9.464722
 
-        val posX = (location.longitude - tlLongitude) / (brLongitude - tlLongitude)
-        val posY = (location.latitude - tlLatitude) / (brLatitude - tlLatitude)
-
-        Log.d("posX", "$posX")
-        Log.d("posY", "$posY")
+        val posX = (location.first - tlLongitude) / (brLongitude - tlLongitude)
+        val posY = (location.second - tlLatitude) / (brLatitude - tlLatitude)
 
         val markerPosition = Pair(posX, posY)
         mainViewModel.setMarkerPosition(markerPosition)
@@ -119,66 +117,75 @@ class CreateFragment : Fragment() {
         mapImageWidth: Int,
         mapImageHeight: Int
     ) {
-        val markerPosX = markerPosition.first
-        val markerPosY = markerPosition.second
-
         val markerViewWidth = binding.target.width
         val markerViewHeight = binding.target.height
 
-        val adjustedMarkerPosX = markerPosX * mapImageWidth - markerViewWidth / 2
-        val adjustedMarkerPosY = markerPosY * mapImageHeight - markerViewHeight / 2
+        val markerPosX = markerPosition.first * mapImageWidth - markerViewWidth / 2
+        val markerPosY = markerPosition.second * mapImageHeight - markerViewHeight / 2
 
-        binding.target.x = adjustedMarkerPosX.toFloat()
-        binding.target.y = adjustedMarkerPosY.toFloat()
+        binding.target.x = markerPosX.toFloat()
+        binding.target.y = markerPosY.toFloat()
 
-        Log.d(
-            "de.hsfl.PixelPioneers.FlagFury.CreateFragment",
-            "Marker view position updated: ($adjustedMarkerPosX, $adjustedMarkerPosY)"
-        )
     }
 
     private fun showErrorToast(error: String) {
         Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
     }
 
-    private fun createFlagMarker() {
-        val markerPosition = mainViewModel.getMarkerPosition()
-        if (markerPosition != null) {
-            val flagMarker = ImageView(requireContext())
-            flagMarker.id = View.generateViewId()
-            flagMarker.setImageResource(R.drawable.circle)
-            flagMarker.layoutParams = ViewGroup.LayoutParams(20, 20)
+    private fun addFlagMarker(
+        currentPosition: Pair<Double, Double>?,
+        markerPosition: Pair<Double, Double>?
+    ) {
+        currentPosition?.let {currentPosition -> conquestPoints.add(currentPosition) }
+        val markerSize = 20
+        markerPosition?.let {
+            val flagMarker = createFlagMarker(markerSize, R.drawable.circle_grey)
+            binding.constraintLayout.addView(flagMarker)
 
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
 
-            val markerPosX = markerPosition.first
-            val markerPosY = markerPosition.second
+            val markerPosX = (markerPosition.first * mapImageWidth) - (markerSize / 2)
+            val markerPosY = markerPosition.second * mapImageHeight - markerSize / 2
 
-            val adjustedMarkerPosX = markerPosX * mapImageWidth
-            val adjustedMarkerPosY = markerPosY * mapImageHeight
+            Log.d("Position im Fragment","$markerPosX $markerPosY")
 
-            binding.constraintLayout.addView(flagMarker)
+            setViewConstraints(flagMarker, markerPosX,markerPosY)
 
-            val constraintSet = ConstraintSet()
-            constraintSet.clone(binding.constraintLayout)
-
-            constraintSet.connect(
-                flagMarker.id,
-                ConstraintSet.START,
-                binding.campusCard.id,
-                ConstraintSet.START,
-                adjustedMarkerPosX.toInt()
-            )
-            constraintSet.connect(
-                flagMarker.id,
-                ConstraintSet.TOP,
-                binding.campusCard.id,
-                ConstraintSet.TOP,
-                adjustedMarkerPosY.toInt()
-            )
-
-            constraintSet.applyTo(binding.constraintLayout)
         }
     }
+
+    private fun createFlagMarker(markerSize: Int, picture: Int) : ImageView{
+        val flagMarker = ImageView(requireContext())
+        flagMarker.id = View.generateViewId()
+        flagMarker.setImageResource(picture)
+        flagMarker.layoutParams = ViewGroup.LayoutParams(markerSize, markerSize)
+        return flagMarker
+    }
+
+    private fun setViewConstraints(
+        flagMarker: ImageView,
+        markerPosX: Double,
+        markerPosY: Double
+    ) {
+        ConstraintSet().apply {
+            clone(binding.constraintLayout)
+            connect(
+                flagMarker.id,
+                ConstraintSet.START,
+                binding.campusCard.id,
+                ConstraintSet.START,
+                markerPosX.toInt()
+            )
+            connect(
+                flagMarker.id,
+                ConstraintSet.TOP,
+                binding.campusCard.id,
+                ConstraintSet.TOP,
+                markerPosY.toInt()
+            )
+            applyTo(binding.constraintLayout)
+        }
+    }
+
 }

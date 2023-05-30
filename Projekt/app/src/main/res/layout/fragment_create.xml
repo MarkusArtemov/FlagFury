@@ -16,9 +16,12 @@
         <ImageView
             android:id="@+id/campusCard"
             android:layout_width="408dp"
-            android:layout_height="457dp"
+            android:layout_height="365dp"
+            android:layout_marginBottom="16dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@+id/editTextName"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="0.333"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/campuskarte" />
