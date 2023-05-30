@@ -8,33 +8,49 @@
     tools:context=".CreateFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".CreateActivity">
 
         <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="412dp"
-            android:layout_height="352dp"
-            android:layout_marginTop="16dp"
-            app:srcCompat="@drawable/campuskarte"
-            app:layout_constraintTop_toTopOf="parent"
+            android:id="@+id/campusCard"
+            android:layout_width="408dp"
+            android:layout_height="365dp"
+            android:layout_marginBottom="16dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@+id/editTextName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.333"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/campuskarte" />
 
         <EditText
             android:id="@+id/editTextName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:ems="10"
             android:gravity="center_horizontal"
             android:hint="Enter Name"
             android:inputType="textPersonName"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView2" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.689" />
+
+        <ImageView
+            android:id="@+id/target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:src="@android:drawable/ic_menu_mylocation"
+            app:layout_constraintStart_toStartOf="@id/campusCard"
+            app:layout_constraintTop_toTopOf="@id/campusCard"
+            app:layout_constraintEnd_toEndOf="@id/campusCard"
+            app:layout_constraintBottom_toBottomOf="@id/campusCard"/>
 
         <Button
             android:id="@+id/buttonFlagPosition"

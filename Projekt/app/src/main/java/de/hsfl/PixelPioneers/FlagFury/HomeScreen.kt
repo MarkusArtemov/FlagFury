@@ -31,14 +31,4 @@ class HomeScreen : Fragment() {
         }
         return binding.root
     }
-
-
-    override fun onResume() {
-        super.onResume()
-        if (!mainViewModel.permissionChecked) {
-            (activity as MainActivity).startLocation()
-            mainViewModel.permissionChecked = true;
-
-        }
-    }
 }
