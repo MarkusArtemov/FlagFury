@@ -15,8 +15,8 @@
 
         <ImageView
             android:id="@+id/campusCard"
-            android:layout_width="408dp"
-            android:layout_height="365dp"
+            android:layout_width="413dp"
+            android:layout_height="370dp"
             android:layout_marginBottom="16dp"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toTopOf="@+id/editTextName"

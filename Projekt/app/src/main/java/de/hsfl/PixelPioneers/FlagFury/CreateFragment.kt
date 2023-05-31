@@ -175,17 +175,18 @@ class CreateFragment : Fragment() {
                 ConstraintSet.START,
                 binding.campusCard.id,
                 ConstraintSet.START,
-                markerPosX.toInt()
+                (markerPosX).toInt()
             )
             connect(
                 flagMarker.id,
                 ConstraintSet.TOP,
                 binding.campusCard.id,
                 ConstraintSet.TOP,
-                markerPosY.toInt()
+                (markerPosY).toInt()
             )
             applyTo(binding.constraintLayout)
         }
     }
+
 
 }

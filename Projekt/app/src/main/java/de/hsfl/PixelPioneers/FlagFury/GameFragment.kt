@@ -17,11 +17,14 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 class GameFragment : Fragment() {
     private lateinit var binding: FragmentGameBinding
     private val mainViewModel: MainViewModel by activityViewModels()
+    private var playerList = emptyList<JSONObject>()
 
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
@@ -89,9 +92,7 @@ class GameFragment : Fragment() {
         var location = mainViewModel.getCurrentPosition()
         location?.let {
             updateMarkerPosition(location)
-            Log.d("Locationvergleich", " longi : ${location.first} lati : ${location.second}")
             val markerPosition = mainViewModel.getMarkerPosition()
-            Log.d("MarkerPositiooon ","$markerPosition")
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
             markerPosition?.let { it1 -> updateMarkerViewPosition(it1, mapImageWidth, mapImageHeight) }
@@ -104,11 +105,22 @@ class GameFragment : Fragment() {
     fun getPlayers(){
         mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken(), { players ->
             players?.let {
-                val playerList = it.getJSONArray("players")
+                val playerJSONArray = it.getJSONArray("players")
+                this.playerList = jsonArrayToList(playerJSONArray)
+                Log.d("GameFragment", " Spielerliste : $playerList")
             }
         }, { error ->
             error?.let { showErrorToast(it) }
         })
+    }
+
+    private fun jsonArrayToList(jsonArray: JSONArray): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            list.add(jsonObject)
+        }
+        return list
     }
 
     private fun startPeriodicUpdate() {
@@ -213,8 +225,6 @@ class GameFragment : Fragment() {
 
             val markerPosX = flagPosition.first * mapImageWidth - markerSize / 2
             val markerPosY = flagPosition.second * mapImageHeight - markerSize / 2
-
-            Log.d("Position im Game","$markerPosX $markerPosX")
 
             setViewConstraints(flagMarker, markerPosX, markerPosY)
         }
