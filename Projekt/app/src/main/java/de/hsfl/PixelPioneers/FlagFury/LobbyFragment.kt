@@ -46,7 +46,12 @@ class LobbyFragment : Fragment() {
 
 
         joinGameButton.setOnClickListener {
-            navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
+            (activity as MainActivity).startDiscovery()
+            mainViewModel.bluetoothEnabled.observe(viewLifecycleOwner) { isEnabled ->
+                if (isEnabled) {
+                    navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
+                }
+            }
         }
 
         cancelButton.setOnClickListener {

@@ -19,6 +19,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _players: MutableLiveData<JSONObject> = MutableLiveData()
     private val _currentPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
     private val _markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+    val bluetoothEnabled = MutableLiveData<Boolean>().apply { value = false }
 
     val name: LiveData<String>
         get() = _name
@@ -127,5 +128,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         apiRepository.removePlayer(game, name, token, { game, name ->
             callback(game, name)
         }, errorCallback)
+    }
+
+    fun discoverDevices() {
+
     }
 }
