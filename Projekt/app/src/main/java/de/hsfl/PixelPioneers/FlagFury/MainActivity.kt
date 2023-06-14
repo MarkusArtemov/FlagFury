@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             super.onLocationResult(p0)
             for (location in p0.locations) {
                 mainViewModel.setCurrentPosition(Pair(location.longitude, location.latitude))
-                Log.d("Meine Position", "${mainViewModel.getCurrentPosition()}")
+                Log.d("Meine Position", "${mainViewModel.currentPosition.value}")
             }
         }
     }

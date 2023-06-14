@@ -14,12 +14,12 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
 import org.json.JSONArray
 import org.json.JSONObject
-
 
 class GameFragment : Fragment() {
     private lateinit var binding: FragmentGameBinding
@@ -39,9 +39,16 @@ class GameFragment : Fragment() {
         val leaveButton: Button = binding.button
 
         leaveButton.setOnClickListener {
-            val snackBar = Snackbar.make(requireView(), "Möchtest du das Spiel wirklich verlassen?", Snackbar.LENGTH_LONG)
+            val snackBar = Snackbar.make(
+                requireView(),
+                "Möchtest du das Spiel wirklich verlassen?",
+                Snackbar.LENGTH_LONG
+            )
             snackBar.setAction("Ja") {
-                mainViewModel.removePlayer(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken(),
+                mainViewModel.removePlayer(
+                    mainViewModel.gameId.value,
+                    mainViewModel.name.value,
+                    mainViewModel.token.value,
                     { game, name ->
                         navController.navigate(R.id.action_gameFragment_to_homeScreen)
                     },
@@ -56,62 +63,22 @@ class GameFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        askForConquestPoints { points ->
-            createAllFlags(points)
-        }
-        startPeriodicUpdate()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopPeriodicUpdate()
-    }
-
-    private fun showErrorToast(error: String) {
-        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun askForConquestPoints(callback : (points : List<Point>) -> Unit){
-        mainViewModel.getPoints(
-            mainViewModel.getGameId(),
-            mainViewModel.getName(),
-            mainViewModel.getToken(),
-            {points, state, game ->
-                Log.d("GameFragment", "$points $state $game")
-                points?.let { callback(it) }
+    private fun getPlayers() {
+        mainViewModel.getPlayers(
+            mainViewModel.gameId.value,
+            mainViewModel.name.value,
+            mainViewModel.token.value,
+            { players ->
+                players?.let {
+                    val playerJSONArray = it.getJSONArray("players")
+                    this.playerList = jsonArrayToList(playerJSONArray)
+                    Log.d("GameFragment", " Spielerliste : $playerList")
+                }
             },
-            {  error ->
-                Log.d("GameFragment", "Es ist zu einem Fehler gekommen")
+            { error ->
+                error?.let { showErrorToast(it) }
             }
-
         )
-    }
-    private fun updateLocationMarker(){
-        var location = mainViewModel.getCurrentPosition()
-        location?.let {
-            updateMarkerPosition(location)
-            val markerPosition = mainViewModel.getMarkerPosition()
-            val mapImageWidth = binding.campusCard.width
-            val mapImageHeight = binding.campusCard.height
-            markerPosition?.let { it1 -> updateMarkerViewPosition(it1, mapImageWidth, mapImageHeight) }
-            binding.target.visibility = View.VISIBLE
-        }
-    }
-
-
-
-    fun getPlayers(){
-        mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken(), { players ->
-            players?.let {
-                val playerJSONArray = it.getJSONArray("players")
-                this.playerList = jsonArrayToList(playerJSONArray)
-                Log.d("GameFragment", " Spielerliste : $playerList")
-            }
-        }, { error ->
-            error?.let { showErrorToast(it) }
-        })
     }
 
     private fun jsonArrayToList(jsonArray: JSONArray): List<JSONObject> {
@@ -123,9 +90,52 @@ class GameFragment : Fragment() {
         return list
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        askForConquestPoints { points ->
+            createAllFlags(points)
+        }
+        startPeriodicUpdate()
+
+
+        mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
+           it?.let { updateMarkerPosition(it)
+               binding.target.visibility = View.VISIBLE
+           }
+        })
+    }
+
+
+
+
+
+    override fun onPause() {
+        super.onPause()
+        stopPeriodicUpdate()
+    }
+
+    private fun showErrorToast(error: String) {
+        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun askForConquestPoints(callback: (points: List<Point>) -> Unit) {
+        mainViewModel.getPoints(
+            mainViewModel.gameId.value,
+            mainViewModel.name.value,
+            mainViewModel.token.value,
+            { points, state, game ->
+                Log.d("GameFragment", "$points $state $game")
+                points?.let { callback(it) }
+            },
+            { error ->
+                Log.d("GameFragment", "Es ist zu einem Fehler gekommen")
+            }
+        )
+    }
+
+
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            updateLocationMarker()
             askForConquestPoints { points ->
                 updateFlagStatus(points)
             }
@@ -133,6 +143,9 @@ class GameFragment : Fragment() {
             startPeriodicUpdate()
         }, updateInterval)
     }
+
+
+
 
     private fun updateFlagStatus(points: List<Point>) {
         for (point in points) {
@@ -142,7 +155,6 @@ class GameFragment : Fragment() {
                 it.setImageResource(imageResource)
             }
         }
-
     }
 
     private fun getFlagMarkerByPointId(pointId: String): ImageView? {
@@ -150,8 +162,7 @@ class GameFragment : Fragment() {
         return flagMarkers.firstOrNull { it.id == pointId.toInt() }
     }
 
-
-    private fun getColorFromTeamNumber(team : Int) : Int {
+    private fun getColorFromTeamNumber(team: Int): Int {
         return when (team) {
             -1 -> R.drawable.circle_yellow
             0 -> R.drawable.circle_grey
@@ -161,16 +172,16 @@ class GameFragment : Fragment() {
         }
     }
 
-
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)
     }
 
-    private fun updateMarkerPosition(position : Pair<Double, Double>) {
+    private fun updateMarkerPosition(position: Pair<Double, Double>) {
         val markerPosition = generatePosition(position)
-        mainViewModel.setMarkerPosition(markerPosition)
+        val mapImageWidth = binding.campusCard.width
+        val mapImageHeight = binding.campusCard.height
+        updateMarkerViewPosition(markerPosition, mapImageWidth, mapImageHeight)
     }
-
 
     private fun generatePosition(position: Pair<Double, Double>): Pair<Double, Double> {
         val tlLatitude = 54.778514
@@ -183,7 +194,6 @@ class GameFragment : Fragment() {
 
         return Pair(posX, posY)
     }
-
 
     private fun updateMarkerViewPosition(
         markerPosition: Pair<Double, Double>,
@@ -200,16 +210,13 @@ class GameFragment : Fragment() {
         binding.target.y = markerPosY.toFloat()
     }
 
-
-
-    private fun createAllFlags(points : List<Point>){
-        for (point in points){
+    private fun createAllFlags(points: List<Point>) {
+        for (point in points) {
             addFlagMarker(point)
         }
     }
 
-    private fun addFlagMarker(point: Point, ) {
-
+    private fun addFlagMarker(point: Point) {
         val flagPosition = generatePosition(Pair(point.longitude, point.latitude))
 
         flagPosition.let { flagPosition ->
@@ -237,8 +244,6 @@ class GameFragment : Fragment() {
         return flagMarker
     }
 
-
-
     private fun setViewConstraints(
         flagMarker: ImageView,
         markerPosX: Double,
@@ -263,17 +268,5 @@ class GameFragment : Fragment() {
             applyTo(binding.constraintLayout)
         }
     }
-
-
 }
-
-
-
-
-
-
-
-
-
-
 

@@ -34,9 +34,9 @@ class LobbyFragment : Fragment() {
         val joinGameButton: Button = binding.buttonStart
         val cancelButton: Button = binding.buttonCancel
         binding.textViewGameId.text = buildString {
-        append("Game ID: ")
-        append(mainViewModel.getGameId())
-    }
+            append("Game ID: ")
+            append(mainViewModel.gameId.value)
+        }
 
         playerAdapter = PlayerAdapter(emptyList())
 
@@ -68,7 +68,7 @@ class LobbyFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            mainViewModel.getPlayers(mainViewModel.getGameId(), mainViewModel.getName(), mainViewModel.getToken(), { players ->
+            mainViewModel.getPlayers(mainViewModel.gameId.value, mainViewModel.name.value, mainViewModel.token.value, { players ->
                 players?.let {
                     val playerList = it.getJSONArray("players")
                     val convertedList = jsonArrayToList(playerList)

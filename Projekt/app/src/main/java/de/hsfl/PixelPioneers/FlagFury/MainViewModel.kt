@@ -3,55 +3,78 @@ package de.hsfl.PixelPioneers.FlagFury
 import android.app.Application
 import android.location.Location
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import org.json.JSONArray
 import org.json.JSONObject
 
-class MainViewModel(app : Application) : AndroidViewModel(app){
+class MainViewModel(app: Application) : AndroidViewModel(app) {
+
     private val apiRepository = ApiRepository.getInstance(app)
 
-    private val name : MutableLiveData<String> = MutableLiveData()
-    private val token : MutableLiveData<String> = MutableLiveData()
-    private val gameId : MutableLiveData<String> = MutableLiveData()
-    private val team : MutableLiveData<Int> = MutableLiveData()
-    private val players : MutableLiveData<JSONObject> = MutableLiveData()
-    private val currentPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
-    private val markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+    private val _name: MutableLiveData<String> = MutableLiveData()
+    private val _token: MutableLiveData<String> = MutableLiveData()
+    private val _gameId: MutableLiveData<String> = MutableLiveData()
+    private val _team: MutableLiveData<Int> = MutableLiveData()
+    private val _players: MutableLiveData<JSONObject> = MutableLiveData()
+    private val _currentPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+    private val _markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
 
+    val name: LiveData<String>
+        get() = _name
 
-    fun getName() : String? = name.value
-    fun getToken() : String? = token.value
-    fun getGameId() : String? = gameId.value
-    fun getTeam() : Int? = team.value
-    fun getPlayers() : JSONObject? = players.value
-    fun getMarkerPosition(): Pair<Double, Double>? = markerPosition.value
-    fun getCurrentPosition() : Pair<Double, Double>? = currentPosition.value
+    val token: LiveData<String>
+        get() = _token
 
+    val gameId: LiveData<String>
+        get() = _gameId
 
-    fun setName(name: String){
-        this.name.value = name
-    }
-    fun setToken(token : String){
-        this.token.value = token
-    }
-    fun setGameId(gameId : String){
-        this.gameId.value = gameId
-    }
-    fun setPlayers(players : JSONObject){
-        this.players.value = players
-    }
-    fun setTeam(team : Int){
-        this.team.value = team
-    }
-    fun setMarkerPosition(markerPosition : Pair<Double, Double>){
-        this.markerPosition.value = markerPosition
-    }
-    fun setCurrentPosition(currentPosition : Pair<Double, Double>){
-        this.currentPosition.value = currentPosition
+    val team: LiveData<Int>
+        get() = _team
+
+    val players: LiveData<JSONObject>
+        get() = _players
+
+    val currentPosition: LiveData<Pair<Double, Double>>
+        get() = _currentPosition
+
+    val markerPosition: LiveData<Pair<Double, Double>>
+        get() = _markerPosition
+
+    fun setName(name: String) {
+        _name.value = name
     }
 
+    fun setToken(token: String) {
+        _token.value = token
+    }
 
-    fun registerGame(name: String, points: List<Pair<Double, Double>>, callback: (gameId: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun setGameId(gameId: String) {
+        _gameId.value = gameId
+    }
+
+    fun setPlayers(players: JSONObject) {
+        _players.value = players
+    }
+
+    fun setTeam(team: Int) {
+        _team.value = team
+    }
+
+    fun setMarkerPosition(markerPosition: Pair<Double, Double>) {
+        _markerPosition.value = markerPosition
+    }
+
+    fun setCurrentPosition(currentPosition: Pair<Double, Double>) {
+        _currentPosition.value = currentPosition
+    }
+
+    fun registerGame(
+        name: String,
+        points: List<Pair<Double, Double>>,
+        callback: (gameId: String, token: String) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         apiRepository.registerGame(name, points, { gameId, token ->
             setGameId(gameId)
             setToken(token)
@@ -59,34 +82,50 @@ class MainViewModel(app : Application) : AndroidViewModel(app){
         }, errorCallback)
     }
 
-    fun joinGame(gameId: String, name: String, callback: (team: Int, token : String) -> Unit, errorCallback: (error: String?) -> Unit) {
-
-            apiRepository.joinGame(gameId, name, { team, token ->
-                callback(team, token)
-            }, errorCallback)
+    fun joinGame(
+        gameId: String,
+        name: String,
+        callback: (team: Int, token: String) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.joinGame(gameId, name, { team, token ->
+            callback(team, token)
+        }, errorCallback)
     }
 
-
-    fun getPlayers(gameId: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun getPlayers(
+        gameId: String?,
+        name: String?,
+        token: String?,
+        callback: (players: JSONObject?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         apiRepository.getPlayers(gameId, name, token, { players ->
             callback(players)
         }, errorCallback)
     }
 
-
-    fun getPoints(gameId: String?, name: String?, token: String?, callback: (points: List<Point>?, state : String?, game : String?) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun getPoints(
+        gameId: String?,
+        name: String?,
+        token: String?,
+        callback: (points: List<Point>?, state: String?, game: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         apiRepository.getPoints(gameId, name, token, { points, state, game ->
             callback(points, state, game)
         }, errorCallback)
     }
 
-    fun removePlayer(game: String?, name: String?, token: String?, callback: (game : String, name : String?) -> Unit, errorCallback: (error: String?) -> Unit){
-        apiRepository.removePlayer(game,name,token, { game, name ->
-            callback(game,name)
+    fun removePlayer(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (game: String, name: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.removePlayer(game, name, token, { game, name ->
+            callback(game, name)
         }, errorCallback)
     }
-
-
-
-
 }
