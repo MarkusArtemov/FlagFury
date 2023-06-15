@@ -25,6 +25,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _currentPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
     private val _markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
 
+    private val lastMessage: MutableLiveData<String> = MutableLiveData()
+    private val lastErrorMessage: MutableLiveData<Error> = MutableLiveData()
+
+
+
+
     private val bluetoothRepository = BluetoothRepository.getInstance().apply {
         discoveryCallback = {device ->
             val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
@@ -34,13 +40,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    val bluetoothEnabled = MutableLiveData<Boolean>().apply { value = false }
-
     val discoveredDevices: LiveData<List<BluetoothDevice>>
         get() = _discoveredDevices
 
     fun discoverDevices() {
         bluetoothRepository.startDiscovery(getApplication())
+    }
+
+    fun startServer(){
+        Log.d("MainViewModel", "Starting Server")
+        bluetoothRepository.startServer({message->
+            lastMessage.value = message
+        },{error->
+            lastErrorMessage.value = error
+        })
+    }
+
+    fun stopServer(){
+        Log.d("MainViewModel", "Stopping Server")
+        bluetoothRepository.stopServer()
     }
 
     val name: LiveData<String>
