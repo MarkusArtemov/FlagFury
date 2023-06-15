@@ -12,26 +12,25 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.lokibt.bluetooth.BluetoothAdapter
+import com.lokibt.bluetooth.BluetoothDevice
 import java.util.*
-
 
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val LOCATION_PERMISSION_CODE = 200
-        private const val BLUETOOTH_ENABLE_REQUEST_CODE = 201
         private const val BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 202
         private val PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     private lateinit var client: FusedLocationProviderClient
     private val mainViewModel: MainViewModel by viewModels()
-    private var bluetoothRepository: BluetoothRepository? = null
 
     private val callback = object : LocationCallback() {
         override fun onLocationResult(p0: LocationResult) {
@@ -56,9 +55,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         client = LocationServices.getFusedLocationProviderClient(this)
         requestLocationUpdates()
-
-        val serverUUID = UUID.randomUUID()
-        bluetoothRepository = BluetoothRepository(serverUUID)
     }
 
     private fun requestLocationUpdates() {
@@ -115,24 +111,11 @@ class MainActivity : AppCompatActivity() {
                     showEnableGpsDialog()
                 }
             }
-            BLUETOOTH_ENABLE_REQUEST_CODE -> {
-                if (resultCode == RESULT_OK) {
-                    Toast.makeText(this, "Bluetooth wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
-                        .show()
-                    mainViewModel.bluetoothEnabled.value = true
-                } else {
-                    Toast.makeText(this, "Bluetooth Aktivierung wurde abgelehnt", Toast.LENGTH_SHORT)
-                        .show()
-                    mainViewModel.bluetoothEnabled.value = false
-                }
-            }
             BLUETOOTH_DISCOVERABLE_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(
-                        this,
-                        "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
+                        .show()
+                    startDiscovery()
                     mainViewModel.bluetoothEnabled.value = true
                 } else {
                     Toast.makeText(
@@ -145,27 +128,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun startDiscovery() {
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-            val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-                putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600)
-            }
-            startActivityForResult(intent, BLUETOOTH_DISCOVERABLE_REQUEST_CODE)
-        } else {
-            mainViewModel.discoverDevices()
-        }
-    }
-
-    fun startConquerService() {
-        bluetoothRepository?.startConquerService()
-    }
-
-    fun stopConquerService() {
-        bluetoothRepository?.stopConquerService()
-    }
-
     private fun showPermissionDeniedToast() {
         Toast.makeText(this, "GPS ist zum Spielen erforderlich", Toast.LENGTH_SHORT).show()
     }
+
+
+    fun startDiscovery(){
+            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            if (bluetoothAdapter.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+                val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                    putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600)
+                }
+                startActivityForResult(intent, BLUETOOTH_DISCOVERABLE_REQUEST_CODE)
+            } else {
+                mainViewModel.discoverDevices()
+            }
+    }
+
 }

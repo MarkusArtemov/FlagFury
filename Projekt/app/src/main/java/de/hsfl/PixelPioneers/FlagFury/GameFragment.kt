@@ -99,14 +99,11 @@ class GameFragment : Fragment() {
 
 
         mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
-           it?.let { updateMarkerPosition(it)
-               binding.target.visibility = View.VISIBLE
-           }
+            it?.let { updateMarkerPosition(it)
+                binding.target.visibility = View.VISIBLE
+            }
         })
     }
-
-
-
 
 
     override fun onPause() {
@@ -133,7 +130,6 @@ class GameFragment : Fragment() {
         )
     }
 
-
     private fun startPeriodicUpdate() {
         handler.postDelayed({
             askForConquestPoints { points ->
@@ -141,11 +137,9 @@ class GameFragment : Fragment() {
             }
             getPlayers()
             startPeriodicUpdate()
+            Log.d("GameFragment", "Discovered Devices : ${mainViewModel.discoveredDevices.value}")
         }, updateInterval)
     }
-
-
-
 
     private fun updateFlagStatus(points: List<Point>) {
         for (point in points) {
@@ -269,4 +263,3 @@ class GameFragment : Fragment() {
         }
     }
 }
-

@@ -44,11 +44,10 @@ class LobbyFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = playerAdapter
 
-
         joinGameButton.setOnClickListener {
             (activity as MainActivity).startDiscovery()
-            mainViewModel.bluetoothEnabled.observe(viewLifecycleOwner) { isEnabled ->
-                if (isEnabled) {
+            mainViewModel.bluetoothEnabled.observe(viewLifecycleOwner) { bluetoothEnabled ->
+                if (bluetoothEnabled) {
                     navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
                 }
             }
@@ -89,7 +88,6 @@ class LobbyFragment : Fragment() {
     private fun showErrorToast(error : String) {
         Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
     }
-
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)

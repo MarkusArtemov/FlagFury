@@ -67,6 +67,7 @@ class CreateFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mainViewModel.currentPosition?.observe(viewLifecycleOwner) { currentPosition ->
+            Log.d("position", "Pooositiooon ${mainViewModel.currentPosition}")
             updateLocationMarker(currentPosition)
         }
     }

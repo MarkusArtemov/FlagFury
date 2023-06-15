@@ -2,15 +2,20 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.lokibt.bluetooth.BluetoothDevice
 import org.json.JSONArray
 import org.json.JSONObject
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
+
+
+    private val _discoveredDevices: MutableLiveData<List<BluetoothDevice>> = MutableLiveData()
 
     private val _name: MutableLiveData<String> = MutableLiveData()
     private val _token: MutableLiveData<String> = MutableLiveData()
@@ -19,7 +24,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _players: MutableLiveData<JSONObject> = MutableLiveData()
     private val _currentPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
     private val _markerPosition: MutableLiveData<Pair<Double, Double>> = MutableLiveData()
+
+    private val bluetoothRepository = BluetoothRepository.getInstance().apply {
+        discoveryCallback = {device ->
+            val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
+            updatedList.add(device)
+            _discoveredDevices.postValue(updatedList)
+            Log.d("Mainviewmodel","${_discoveredDevices.value}")
+        }
+    }
+
     val bluetoothEnabled = MutableLiveData<Boolean>().apply { value = false }
+
+    val discoveredDevices: LiveData<List<BluetoothDevice>>
+        get() = _discoveredDevices
+
+    fun discoverDevices() {
+        bluetoothRepository.startDiscovery(getApplication())
+    }
 
     val name: LiveData<String>
         get() = _name
@@ -130,7 +152,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }, errorCallback)
     }
 
-    fun discoverDevices() {
 
-    }
+
 }
