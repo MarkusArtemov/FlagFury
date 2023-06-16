@@ -25,7 +25,6 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val LOCATION_PERMISSION_CODE = 200
-        private const val BLUETOOTH_ENABLE_REQUEST_CODE = 201
         private const val BLUETOOTH_DISCOVERABLE_REQUEST_CODE = 202
         private val PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
     }
@@ -112,23 +111,13 @@ class MainActivity : AppCompatActivity() {
                     showEnableGpsDialog()
                 }
             }
-            BLUETOOTH_ENABLE_REQUEST_CODE -> {
-                if (resultCode == RESULT_OK) {
-                    Toast.makeText(this, "Bluetooth wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
-                        .show()
-                    mainViewModel.discoverDevices()
-                } else {
-                    Toast.makeText(this, "Bluetooth Aktivierung wurde abgelehnt", Toast.LENGTH_SHORT)
-                        .show()
-
-                }
-            }
 
             BLUETOOTH_DISCOVERABLE_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
                     Toast.makeText(this, "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
                         .show()
                     mainViewModel.startServer()
+                    mainViewModel.discoverDevices()
                 } else {
                     Toast.makeText(
                         this,
@@ -145,28 +134,16 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun startDiscovery(){
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter.state != BluetoothAdapter.STATE_ON) {
-                val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE).apply {
-                    putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600)
-                }
-                startActivityForResult(intent, BLUETOOTH_ENABLE_REQUEST_CODE)
-            } else {
-                mainViewModel.discoverDevices()
-            }
-    }
-
-
-    fun startServer(){
+    fun startDiscoveryAndServer() {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+        if (bluetoothAdapter.state != BluetoothAdapter.STATE_ON) {
             val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
                 putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600)
             }
             startActivityForResult(intent, BLUETOOTH_DISCOVERABLE_REQUEST_CODE)
         } else {
             mainViewModel.startServer()
+            mainViewModel.discoverDevices()
         }
     }
 

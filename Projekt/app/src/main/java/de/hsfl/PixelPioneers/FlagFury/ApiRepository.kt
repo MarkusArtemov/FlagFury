@@ -129,7 +129,7 @@ class ApiRepository private constructor(private val application: Application) {
 
 
     fun getPoints(game: String?, name: String?, token: String?, callback: (points: List<Point>?, state : String?, game : String?) -> Unit, errorCallback: (error: String?) -> Unit) {
-        val url = "https://ctf.letorbi.de/points?simulation"
+        val url = "https://ctf.letorbi.de/points"
 
         val jsonRequest = JSONObject().apply {
             put("game", game)

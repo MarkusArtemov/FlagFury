@@ -17,6 +17,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.lokibt.bluetooth.BluetoothDevice
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
 import org.json.JSONArray
 import org.json.JSONObject
@@ -29,6 +30,7 @@ class GameFragment : Fragment() {
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -37,6 +39,13 @@ class GameFragment : Fragment() {
         binding = FragmentGameBinding.inflate(inflater, container, false)
         val navController = findNavController()
         val leaveButton: Button = binding.button
+
+        mainViewModel.isDefended.observe(viewLifecycleOwner) { defended ->
+            defended?.let {
+                Log.d("tatsächlich","$defended")
+            }
+        }
+
 
         leaveButton.setOnClickListener {
             val snackBar = Snackbar.make(
@@ -50,6 +59,8 @@ class GameFragment : Fragment() {
                     mainViewModel.name.value,
                     mainViewModel.token.value,
                     { game, name ->
+                        mainViewModel.stopDiscoverDevices()
+                        mainViewModel.stopServer()
                         navController.navigate(R.id.action_gameFragment_to_homeScreen)
                     },
                     { error ->
@@ -58,6 +69,13 @@ class GameFragment : Fragment() {
                 )
             }
             snackBar.show()
+        }
+
+
+        mainViewModel.discoveredDevices.observe(viewLifecycleOwner) { devices ->
+            devices?.let {
+                connectToOpponents()
+            }
         }
 
         return binding.root
@@ -135,11 +153,16 @@ class GameFragment : Fragment() {
             askForConquestPoints { points ->
                 updateFlagStatus(points)
             }
+            connectToOpponents()
             getPlayers()
+            Log.d("22","mainViewModel.isDefended :${mainViewModel.isDefended.value}")
+
             startPeriodicUpdate()
             Log.d("GameFragment", "Discovered Devices : ${mainViewModel.discoveredDevices.value}")
         }, updateInterval)
     }
+
+
 
     private fun updateFlagStatus(points: List<Point>) {
         for (point in points) {
@@ -165,6 +188,19 @@ class GameFragment : Fragment() {
             else -> R.drawable.circle_grey
         }
     }
+
+    private fun connectToOpponents() {
+        val devices = mainViewModel.discoveredDevices.value
+        val team = if (mainViewModel.team.value == 1) "blau" else "rot"
+        if (devices != null) {
+            devices.forEach { device ->
+                mainViewModel.connectToServer(device, team)
+            }
+        } else {
+            mainViewModel.setIsDefended(false)
+        }
+    }
+
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)
