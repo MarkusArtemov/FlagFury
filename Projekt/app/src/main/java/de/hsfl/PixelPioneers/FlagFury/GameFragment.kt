@@ -1,5 +1,6 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -29,7 +30,9 @@ class GameFragment : Fragment() {
 
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
-
+    private var conquerPoints: List<Point> = emptyList()
+    private val conquerCountdownDuration: Long = 10000
+    private var isConquerCountdownRunning: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,13 +42,6 @@ class GameFragment : Fragment() {
         binding = FragmentGameBinding.inflate(inflater, container, false)
         val navController = findNavController()
         val leaveButton: Button = binding.button
-
-        mainViewModel.isDefended.observe(viewLifecycleOwner) { defended ->
-            defended?.let {
-                Log.d("tatsächlich","$defended")
-            }
-        }
-
 
         leaveButton.setOnClickListener {
             val snackBar = Snackbar.make(
@@ -71,10 +67,17 @@ class GameFragment : Fragment() {
             snackBar.show()
         }
 
-
-        mainViewModel.discoveredDevices.observe(viewLifecycleOwner) { devices ->
-            devices?.let {
-                connectToOpponents()
+        mainViewModel.isDefended.observe(viewLifecycleOwner) { isDefended ->
+            if (isDefended) {
+                mainViewModel.currentPosition.value?.let { currentPosition ->
+                    conquerPoints.forEach { conquerPoint ->
+                        if (checkConquerPoint(conquerPoint, currentPosition)) {
+                            mainViewModel.oldConquerPointTeam.value = conquerPoint.team
+                            conquerPoint.team = -1
+                            startConquerCountdown(conquerPoint)
+                        }
+                    }
+                }
             }
         }
 
@@ -90,7 +93,7 @@ class GameFragment : Fragment() {
                 players?.let {
                     val playerJSONArray = it.getJSONArray("players")
                     this.playerList = jsonArrayToList(playerJSONArray)
-                    Log.d("GameFragment", " Spielerliste : $playerList")
+                    Log.d("GameFragment", "Spielerliste: $playerList")
                 }
             },
             { error ->
@@ -111,18 +114,16 @@ class GameFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         askForConquestPoints { points ->
+            conquerPoints = points
             createAllFlags(points)
         }
         startPeriodicUpdate()
 
-
         mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
-            it?.let { updateMarkerPosition(it)
-                binding.target.visibility = View.VISIBLE
-            }
+            it?.let { updateMarkerPosition(it) }
+            binding.target.visibility = View.VISIBLE
         })
     }
-
 
     override fun onPause() {
         super.onPause()
@@ -140,29 +141,26 @@ class GameFragment : Fragment() {
             mainViewModel.token.value,
             { points, state, game ->
                 Log.d("GameFragment", "$points $state $game")
-                points?.let { callback(it) }
+                points?.let {
+                    conquerPoints = it
+                    updateFlagStatus(it)
+                    callback(it)
+                }
             },
             { error ->
-                Log.d("GameFragment", "Es ist zu einem Fehler gekommen")
+                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
             }
         )
     }
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            askForConquestPoints { points ->
-                updateFlagStatus(points)
-            }
             connectToOpponents()
             getPlayers()
-            Log.d("22","mainViewModel.isDefended :${mainViewModel.isDefended.value}")
-
+            Log.d("GameFragment", "Discovered Devices: ${mainViewModel.discoveredDevices.value}")
             startPeriodicUpdate()
-            Log.d("GameFragment", "Discovered Devices : ${mainViewModel.discoveredDevices.value}")
         }, updateInterval)
     }
-
-
 
     private fun updateFlagStatus(points: List<Point>) {
         for (point in points) {
@@ -201,6 +199,39 @@ class GameFragment : Fragment() {
         }
     }
 
+    private fun checkConquerPoint(conquerPoint: Point, currentPosition: Pair<Double, Double>): Boolean {
+        val playerLocation = Location("Player")
+        playerLocation.latitude = currentPosition.second
+        playerLocation.longitude = currentPosition.first
+
+        val conquerLocation = Location("ConquerPoint")
+        conquerLocation.latitude = conquerPoint.latitude
+        conquerLocation.longitude = conquerPoint.longitude
+
+        val distance = playerLocation.distanceTo(conquerLocation)
+        return distance < 5 && conquerPoint.team != mainViewModel.team.value
+    }
+
+    private fun startConquerCountdown(conquerPoint: Point) {
+        val oldTeam = mainViewModel.team.value
+        conquerPoint.team = -1
+
+        if (!isConquerCountdownRunning) {
+            isConquerCountdownRunning = true
+            connectToOpponents()
+
+            handler.postDelayed({
+                mainViewModel.oldConquerPointTeam.value = oldTeam
+                isConquerCountdownRunning = false
+
+                mainViewModel.team.value?.let { team ->
+                    val imageResource = getColorFromTeamNumber(team)
+                    val flagMarker = getFlagMarkerByPointId(conquerPoint.id)
+                    flagMarker?.setImageResource(imageResource)
+                }
+            }, conquerCountdownDuration)
+        }
+    }
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)

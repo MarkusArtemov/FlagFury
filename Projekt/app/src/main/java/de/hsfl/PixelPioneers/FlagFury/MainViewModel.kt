@@ -12,6 +12,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
 
+    private val _oldConquerPointTeam = MutableLiveData<Int>()
+    val oldConquerPointTeam: MutableLiveData<Int>
+        get() = _oldConquerPointTeam
+
 
     private val _isDefended = MutableLiveData<Boolean>()
     val isDefended: LiveData<Boolean>
@@ -69,6 +73,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _discoveredDevices.postValue(updatedList)
         }
     }
+
 
 
     fun connectToServer(serverDevice: BluetoothDevice, team: String) {
