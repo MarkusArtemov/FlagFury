@@ -2,6 +2,7 @@ package de.hsfl.PixelPioneers.FlagFury
 
 import android.location.Location
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -30,9 +31,9 @@ class GameFragment : Fragment() {
 
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
-    private var conquerPoints: List<Point> = emptyList()
-    private val conquerCountdownDuration: Long = 10000
-    private var isConquerCountdownRunning: Boolean = false
+    private var currentPoints: List<Point> = emptyList()
+    private var timerIsRunning = false
+    private var currentPoint: Point? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +43,7 @@ class GameFragment : Fragment() {
         binding = FragmentGameBinding.inflate(inflater, container, false)
         val navController = findNavController()
         val leaveButton: Button = binding.button
+        binding.target.visibility = View.VISIBLE
 
         leaveButton.setOnClickListener {
             val snackBar = Snackbar.make(
@@ -55,7 +57,7 @@ class GameFragment : Fragment() {
                     mainViewModel.name.value,
                     mainViewModel.token.value,
                     { game, name ->
-                        mainViewModel.stopDiscoverDevices()
+                        mainViewModel.stopDiscoverDevices(requireContext())
                         mainViewModel.stopServer()
                         navController.navigate(R.id.action_gameFragment_to_homeScreen)
                     },
@@ -67,24 +69,39 @@ class GameFragment : Fragment() {
             snackBar.show()
         }
 
-        mainViewModel.isDefended.observe(viewLifecycleOwner) { isDefended ->
-            if (isDefended) {
-                mainViewModel.currentPosition.value?.let { currentPosition ->
-                    conquerPoints.forEach { conquerPoint ->
-                        if (checkConquerPoint(conquerPoint, currentPosition)) {
-                            mainViewModel.oldConquerPointTeam.value = conquerPoint.team
-                            conquerPoint.team = -1
-                            startConquerCountdown(conquerPoint)
-                        }
-                    }
+        return binding.root
+    }
+
+
+    val timer = object: CountDownTimer(10_000, 1_000) {
+        override fun onTick(millisUntilFinished: Long) {
+            mainViewModel.discoveredDevices.value?.forEach { device ->
+                val team = mainViewModel.team.value.toString()
+                mainViewModel.connectToServer(device, team)
+                if (mainViewModel.isDefended.value == true) {
+                    timerIsRunning = false
+                    conquerPoint(currentPoint!!.id, "1")
+                    cancel()
                 }
             }
         }
 
-        return binding.root
+
+        override fun onFinish() {
+            timerIsRunning = false
+            mainViewModel.stopDiscoverDevices(requireContext())
+            currentPoint?.let {
+                if(mainViewModel.isDefended.value == false){
+                    conquerPoint(it.id, "1")
+                }
+                currentPoint = null
+            }
+        }
     }
 
-    private fun getPlayers() {
+
+
+        private fun getPlayers() {
         mainViewModel.getPlayers(
             mainViewModel.gameId.value,
             mainViewModel.name.value,
@@ -114,15 +131,22 @@ class GameFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         askForConquestPoints { points ->
-            conquerPoints = points
             createAllFlags(points)
         }
-        startPeriodicUpdate()
-
         mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
-            it?.let { updateMarkerPosition(it) }
-            binding.target.visibility = View.VISIBLE
+            it?.let { updateMarkerPosition(it)
+                for (point in currentPoints){
+                    if(checkConquerPoint(point,it) && !timerIsRunning && mainViewModel.isDefended.value == false){
+                        timer.start()
+                        mainViewModel.startDiscoverDevices(requireContext())
+                        timerIsRunning = true
+                        conquerPoint(point.id, "-1")
+                        currentPoint = point
+                    }
+                }
+            }
         })
+        startPeriodicUpdate()
     }
 
     override fun onPause() {
@@ -142,8 +166,6 @@ class GameFragment : Fragment() {
             { points, state, game ->
                 Log.d("GameFragment", "$points $state $game")
                 points?.let {
-                    conquerPoints = it
-                    updateFlagStatus(it)
                     callback(it)
                 }
             },
@@ -155,8 +177,13 @@ class GameFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            connectToOpponents()
             getPlayers()
+            connectToOpponents()
+            askForConquestPoints { points ->
+                currentPoints = points
+                Log.d("GameFragment", "Die Punkte $points")
+                updateFlagStatus(points)
+            }
             Log.d("GameFragment", "Discovered Devices: ${mainViewModel.discoveredDevices.value}")
             startPeriodicUpdate()
         }, updateInterval)
@@ -209,29 +236,10 @@ class GameFragment : Fragment() {
         conquerLocation.longitude = conquerPoint.longitude
 
         val distance = playerLocation.distanceTo(conquerLocation)
-        return distance < 5 && conquerPoint.team != mainViewModel.team.value
+        return distance < 5 && conquerPoint.team != 1
     }
 
-    private fun startConquerCountdown(conquerPoint: Point) {
-        val oldTeam = mainViewModel.team.value
-        conquerPoint.team = -1
 
-        if (!isConquerCountdownRunning) {
-            isConquerCountdownRunning = true
-            connectToOpponents()
-
-            handler.postDelayed({
-                mainViewModel.oldConquerPointTeam.value = oldTeam
-                isConquerCountdownRunning = false
-
-                mainViewModel.team.value?.let { team ->
-                    val imageResource = getColorFromTeamNumber(team)
-                    val flagMarker = getFlagMarkerByPointId(conquerPoint.id)
-                    flagMarker?.setImageResource(imageResource)
-                }
-            }, conquerCountdownDuration)
-        }
-    }
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)
@@ -254,6 +262,19 @@ class GameFragment : Fragment() {
         val posY = (position.second - tlLatitude) / (brLatitude - tlLatitude)
 
         return Pair(posX, posY)
+    }
+
+    private fun conquerPoint(id : String?, team: String){
+        val game = mainViewModel.gameId.value
+        val name = mainViewModel.name.value
+        val token = mainViewModel.token.value
+        mainViewModel.conquerPoint(game,id,team,name,token,{ response->
+            Log.d("GameFragment","Das bekommen: $response")
+
+        },{error->
+            error?.let { showErrorToast(it) }
+
+        })
     }
 
     private fun updateMarkerViewPosition(

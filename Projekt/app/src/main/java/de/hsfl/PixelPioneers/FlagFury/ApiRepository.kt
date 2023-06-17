@@ -53,6 +53,43 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
+//    Methode: POST
+//    • URL: https://ctf.letorbi.de/point/conquer
+//    • Daten: {"game":42, "point":23, "team":2, "auth":{"name":"Torben",
+//        "token":"nsBhft5McqhWGdhq"}} (Beispiel)
+//    • Antwort: {"game":42, "point":23, "lat":9.123, "long":8.456,
+//        "team":2}
+
+
+    fun conquerPoint(game: String?, pointId: String?,team: String?,name: String?,token: String?,
+                     callback: (obj : JSONObject?) -> Unit
+                     ,errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/point/conquer"
+
+        val jsonRequest = JSONObject().apply {
+            put("game", game)
+            put("point", pointId)
+            put("team", team)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+        Log.d("Das hingesendet","$jsonRequest")
+
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                callback(response)
+            },
+            { error ->
+                errorCallback("Es ist zu einem Fehler gekommen")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+
+
+    }
+
 
     fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"

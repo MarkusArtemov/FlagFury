@@ -45,7 +45,7 @@ class LobbyFragment : Fragment() {
         recyclerView.adapter = playerAdapter
 
         joinGameButton.setOnClickListener {
-            (activity as MainActivity).startDiscoveryAndServer()
+            (activity as MainActivity).startServer()
             navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
         }
 

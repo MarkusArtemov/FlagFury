@@ -40,14 +40,15 @@ class BluetoothRepository {
 
     private var serverSocket: BluetoothServerSocket? = null
 
-    fun startDiscovery(application: Application) {
-        application.registerReceiver(discoveryReceiver, discoveryFilter)
+
+    fun startDiscovery(context: Context) {
+        context.registerReceiver(discoveryReceiver, discoveryFilter)
         _bluetoothAdapter.startDiscovery()
     }
 
-    fun cancelDiscovery(application: Application) {
+    fun cancelDiscovery(context: Context) {
         _bluetoothAdapter.cancelDiscovery()
-        application.unregisterReceiver(discoveryReceiver)
+        context.unregisterReceiver(discoveryReceiver)
     }
 
     fun connectToServer(

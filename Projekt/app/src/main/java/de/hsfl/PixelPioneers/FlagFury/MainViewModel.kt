@@ -1,10 +1,13 @@
 package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
 import com.lokibt.bluetooth.BluetoothDevice
 import org.json.JSONObject
 
@@ -12,8 +15,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
 
-    private val _oldConquerPointTeam = MutableLiveData<Int>()
-    val oldConquerPointTeam: MutableLiveData<Int>
+    private val _oldConquerPointTeam = MutableLiveData<String>()
+    val oldConquerPointTeam: MutableLiveData<String>
         get() = _oldConquerPointTeam
 
 
@@ -74,8 +77,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-
-
     fun connectToServer(serverDevice: BluetoothDevice, team: String) {
         bluetoothRepository.connectToServer(serverDevice, team,
             { defended ->
@@ -92,12 +93,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
 
-    fun discoverDevices() {
+    fun startDiscoverDevices(context : Context) {
         bluetoothRepository.startDiscovery(getApplication())
         Log.d("MainViewModel", "Discovering devices")
     }
 
-    fun stopDiscoverDevices() {
+    fun stopDiscoverDevices(context : Context) {
         bluetoothRepository.cancelDiscovery(getApplication())
     }
 
@@ -202,6 +203,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             callback(points, state, game)
         }, errorCallback)
     }
+
+
+    fun conquerPoint(game: String?, point: String?,team: String?,name: String?,token: String?,
+                     callback: (obj : JSONObject?) -> Unit
+                     ,errorCallback: (error: String?) -> Unit) {
+
+        apiRepository.conquerPoint(game, point,team,name,token,{ response->
+            callback(response)
+        },errorCallback)
+        }
+
+
 
     fun removePlayer(
         game: String?,
