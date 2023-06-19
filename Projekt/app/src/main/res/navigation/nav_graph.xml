@@ -64,5 +64,29 @@
         <action
             android:id="@+id/action_gameFragment_to_homeScreen2"
             app:destination="@id/homeScreen" />
+        <action
+            android:id="@+id/action_gameFragment_to_winBlueFragment"
+            app:destination="@id/winBlueFragment" />
+        <action
+            android:id="@+id/action_gameFragment_to_winRedFragment"
+            app:destination="@id/winRedFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/winBlueFragment"
+        android:name="de.hsfl.PixelPioneers.FlagFury.WinBlueFragment"
+        android:label="fragment_win_blue"
+        tools:layout="@layout/fragment_win_blue" >
+        <action
+            android:id="@+id/action_winBlueFragment_to_homeScreen"
+            app:destination="@id/homeScreen" />
+    </fragment>
+    <fragment
+        android:id="@+id/winRedFragment"
+        android:name="de.hsfl.PixelPioneers.FlagFury.WinRedFragment"
+        android:label="fragment_win_red"
+        tools:layout="@layout/fragment_win_red" >
+        <action
+            android:id="@+id/action_winRedFragment_to_homeScreen"
+            app:destination="@id/homeScreen" />
     </fragment>
 </navigation>
