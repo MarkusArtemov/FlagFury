@@ -45,12 +45,16 @@ class LobbyFragment : Fragment() {
         recyclerView.adapter = playerAdapter
 
         joinGameButton.setOnClickListener {
-            (activity as MainActivity).startServer()
-            navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
+            startGame()
         }
+
 
         cancelButton.setOnClickListener {
             navController.navigate(R.id.action_lobbyFragment_to_homeScreen)
+        }
+
+        mainViewModel.isHost.observe(viewLifecycleOwner) { isHost ->
+            binding.buttonStart.visibility = if (isHost) View.VISIBLE else View.GONE
         }
 
         return binding.root
@@ -66,11 +70,31 @@ class LobbyFragment : Fragment() {
         super.onDestroyView()
     }
 
+    private fun startGame() {
+        mainViewModel.startGame(
+            mainViewModel.gameId.value,
+            mainViewModel.name.value,
+            mainViewModel.token.value,
+            { game,state ->
+                Log.d("Lobby","State changed in Game $game to $state")
+            },
+            { error ->
+                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
+            }
+        )
+    }
+
     private fun startPeriodicUpdate() {
         handler.postDelayed({
             mainViewModel.getPlayers(mainViewModel.gameId.value, mainViewModel.name.value, mainViewModel.token.value, { players ->
                 players?.let {
                     val playerList = it.getJSONArray("players")
+                    val state = it.getString("state")
+                    if(state == "1"){
+                        (activity as MainActivity).startServerAndDiscovery()
+                        findNavController().navigate(R.id.action_lobbyFragment_to_gameFragment)
+                    }
+
                     val convertedList = jsonArrayToList(playerList)
                     playerAdapter.updateList(convertedList)
                 }

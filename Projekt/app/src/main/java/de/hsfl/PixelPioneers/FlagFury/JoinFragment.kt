@@ -47,8 +47,8 @@ class JoinFragment : Fragment() {
                 mainViewModel.joinGame(
                     gameId.text.toString(),
                     nameInput.text.toString(),
-                    { team, token ->
-                        mainViewModel.setTeam(team)
+                    { team1, token ->
+                        mainViewModel.setTeam(team1)
                         mainViewModel.setToken(token)
                         mainViewModel.setGameId(gameId.text.toString())
                         mainViewModel.setName(nameInput.text.toString())

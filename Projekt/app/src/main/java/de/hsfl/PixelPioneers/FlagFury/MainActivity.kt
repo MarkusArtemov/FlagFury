@@ -117,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
                         .show()
                     mainViewModel.startServer()
+                    mainViewModel.startDiscoverDevices()
                 } else {
                     Toast.makeText(
                         this,
@@ -133,7 +134,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun startServer() {
+    fun startServerAndDiscovery() {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter.state != BluetoothAdapter.STATE_ON) {
             val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
@@ -142,6 +143,7 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, BLUETOOTH_DISCOVERABLE_REQUEST_CODE)
         } else {
             mainViewModel.startServer()
+            mainViewModel.startDiscoverDevices()
         }
     }
 

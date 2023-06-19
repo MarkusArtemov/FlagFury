@@ -41,6 +41,7 @@ class CreateFragment : Fragment() {
                     mainViewModel.setGameId(gameId)
                     mainViewModel.setToken(token)
                     mainViewModel.setName(name.text.toString())
+                    mainViewModel.setIsHost(true)
                     navController.navigate(R.id.action_createFragment_to_lobbyFragment)
                 },
                 { error ->
@@ -55,8 +56,8 @@ class CreateFragment : Fragment() {
 
         setFlagButton.setOnClickListener {
             addFlagMarker(
-                mainViewModel.currentPosition?.value,
-                mainViewModel.markerPosition?.value
+                mainViewModel.currentPosition.value,
+                mainViewModel.markerPosition.value
             )
         }
 
@@ -66,7 +67,7 @@ class CreateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mainViewModel.currentPosition?.observe(viewLifecycleOwner) { currentPosition ->
+        mainViewModel.currentPosition.observe(viewLifecycleOwner) { currentPosition ->
             Log.d("position", "Pooositiooon ${mainViewModel.currentPosition}")
             updateLocationMarker(currentPosition)
         }

@@ -53,13 +53,6 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-//    Methode: POST
-//    • URL: https://ctf.letorbi.de/point/conquer
-//    • Daten: {"game":42, "point":23, "team":2, "auth":{"name":"Torben",
-//        "token":"nsBhft5McqhWGdhq"}} (Beispiel)
-//    • Antwort: {"game":42, "point":23, "lat":9.123, "long":8.456,
-//        "team":2}
-
 
     fun conquerPoint(game: String?, pointId: String?,team: String?,name: String?,token: String?,
                      callback: (obj : JSONObject?) -> Unit
@@ -118,7 +111,7 @@ class ApiRepository private constructor(private val application: Application) {
 
 
     fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit,errorCallback: (error: String?) -> Unit) {
-        val url = "https://ctf.letorbi.de/players?simulation"
+        val url = "https://ctf.letorbi.de/players"
 
         val jsonRequest = JSONObject().apply {
             put("game", game)
@@ -139,8 +132,55 @@ class ApiRepository private constructor(private val application: Application) {
         Volley.newRequestQueue(application).add(request)
     }
 
+    fun startGame(game: String?, name: String?, token: String?, callback: (game : String?, state : String?) -> Unit,errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/game/start"
 
-    fun removePlayer(game: String?, name: String?, token: String?, callback: (game : String, name : String?) -> Unit, errorCallback: (error: String?) -> Unit){
+        val jsonRequest = JSONObject().apply {
+            put("game", game)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                val state = response.getString("state")
+                val gameId = response.getString("game")
+                callback(gameId, state)
+            },
+            { error ->
+                errorCallback("Es ist zu einem Fehler gekommen")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+    }
+
+
+    fun endGame(game: String?, name: String?, token: String?, callback: (game : String?, state : String?) -> Unit,errorCallback: (error: String?) -> Unit) {
+        val url = "https://ctf.letorbi.de/game/end"
+
+        val jsonRequest = JSONObject().apply {
+            put("game", game)
+            put("auth", JSONObject().apply {
+                put("name", name)
+                put("token", token)
+            })
+        }
+        val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
+            { response ->
+                val state = response.getString("state")
+                val gameId = response.getString("game")
+                callback(gameId, state)
+            },
+            { error ->
+                errorCallback("Es ist zu einem Fehler gekommen")
+            })
+
+        Volley.newRequestQueue(application).add(request)
+    }
+
+
+    fun removePlayer(game: String?, name: String?, token: String?, callback: (game : String?, name : String?) -> Unit, errorCallback: (error: String?) -> Unit){
 
         val url = "https://ctf.letorbi.de/player/remove"
 
