@@ -28,7 +28,6 @@ class BluetoothRepository {
 
     private var isServerActive = false
     private val _bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    private val serverUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private val redUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FC")
     private val blueUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FD")
 

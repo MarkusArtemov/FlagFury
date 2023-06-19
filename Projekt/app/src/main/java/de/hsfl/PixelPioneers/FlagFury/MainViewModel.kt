@@ -1,49 +1,37 @@
 package de.hsfl.PixelPioneers.FlagFury
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.android.volley.Request
-import com.android.volley.toolbox.JsonObjectRequest
 import com.lokibt.bluetooth.BluetoothDevice
 import org.json.JSONObject
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
+    private val bluetoothRepository = BluetoothRepository.getInstance()
 
     private val _isHost = MutableLiveData<Boolean>()
     val isHost: LiveData<Boolean>
         get() = _isHost
 
-    fun setIsHost(isHost: Boolean) {
-        _isHost.value = isHost
-    }
-
-    init {
-        _isHost.value = false
-    }
+    private val _discoveredDevices = MutableLiveData<List<BluetoothDevice>>()
+    val discoveredDevices: LiveData<List<BluetoothDevice>>
+        get() = _discoveredDevices
 
     private val _oldConquerPointTeam = MutableLiveData<String>()
-    val oldConquerPointTeam: MutableLiveData<String>
+    val oldConquerPointTeam: LiveData<String>
         get() = _oldConquerPointTeam
-
 
     private val _isDefended = MutableLiveData<Boolean>()
     val isDefended: LiveData<Boolean>
         get() = _isDefended
 
-
     private val _discoveryEnabled = MutableLiveData<Boolean>()
     val discoveryEnabled: LiveData<Boolean>
         get() = _discoveryEnabled
-
-    private val _discoveredDevices = MutableLiveData<List<BluetoothDevice>>()
-    val discoveredDevices: LiveData<List<BluetoothDevice>>
-        get() = _discoveredDevices
 
     private val _name = MutableLiveData<String>()
     val name: LiveData<String>
@@ -81,12 +69,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val lastErrorMessage: LiveData<Error>
         get() = _lastErrorMessage
 
-    private val bluetoothRepository = BluetoothRepository.getInstance().apply {
-        discoveryCallback = { device ->
-            val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
-            updatedList.add(device)
-            _discoveredDevices.postValue(updatedList)
-        }
+    init {
+        _isHost.value = false
+        _isDefended.value = false
+    }
+
+    fun setIsHost(isHost: Boolean) {
+        _isHost.value = isHost
+    }
+
+    fun startDiscoverDevices() {
+        bluetoothRepository.startDiscovery(getApplication())
+        Log.d("MainViewModel", "Discovering devices")
+    }
+
+    fun stopDiscoverDevices() {
+        bluetoothRepository.cancelDiscovery(getApplication())
     }
 
     fun connectToServer(serverDevice: BluetoothDevice, team: String) {
@@ -98,29 +96,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 Log.d("MainViewModel", "Verbindung zum Server erfolgreich: isDefended=$defended")
             },
             { error ->
-                _lastErrorMessage.postValue(Error(error.toString()))
+                _lastErrorMessage.postValue(Error(error))
                 Log.e("MainViewModel", "Fehler bei der Verbindung zum Server: $error")
             }
         )
     }
 
 
-    fun startDiscoverDevices() {
-        bluetoothRepository.startDiscovery(getApplication())
-        Log.d("MainViewModel", "Discovering devices")
+    fun setOldConquerPointTeamValue(team : String){
+        _oldConquerPointTeam.value = team
     }
-
-    fun stopDiscoverDevices() {
-        bluetoothRepository.cancelDiscovery(getApplication())
-    }
-
 
     fun startServer() {
         val team = if (_team.value == 1) "blau" else "rot"
-        bluetoothRepository.startServer(team, { clientGameId, clientName ->
-            val isAttacking = false
-            isAttacking
-        },
+        bluetoothRepository.startServer(team,
+            { clientGameId, clientName ->
+                val isAttacking = false
+                isAttacking
+            },
             { error ->
                 _lastErrorMessage.postValue(Error(error.message))
             })
@@ -163,7 +156,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _currentPosition.value = currentPosition
     }
 
-    fun setIsDefended(state : Boolean){
+    fun setIsDefended(state: Boolean) {
         _isDefended.value = state
     }
 
@@ -173,11 +166,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (gameId: String, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.registerGame(name, points, { gameId, token ->
-            setGameId(gameId)
-            setToken(token)
-            callback(gameId, token)
-        }, errorCallback)
+        apiRepository.registerGame(name, points,
+            { gameId, token ->
+                setGameId(gameId)
+                setToken(token)
+                callback(gameId, token)
+            },
+            errorCallback
+        )
     }
 
     fun joinGame(
@@ -186,9 +182,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (team: Int, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.joinGame(gameId, name, { team, token ->
-            callback(team, token)
-        }, errorCallback)
+        apiRepository.joinGame(gameId, name,
+            { team, token ->
+                callback(team, token)
+            },
+            errorCallback
+        )
     }
 
     fun getPlayers(
@@ -198,9 +197,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (players: JSONObject?) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.getPlayers(gameId, name, token, { players ->
-            callback(players)
-        }, errorCallback)
+        apiRepository.getPlayers(gameId, name, token,
+            { players ->
+                callback(players)
+            },
+            errorCallback
+        )
     }
 
     fun getPoints(
@@ -210,39 +212,60 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (points: List<Point>?, state: String?, game: String?) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.getPoints(gameId, name, token, { points, state, game ->
-            callback(points, state, game)
-        }, errorCallback)
+        apiRepository.getPoints(gameId, name, token,
+            { points, state, game ->
+                callback(points, state, game)
+            },
+            errorCallback
+        )
     }
 
-
-    fun startGame(game: String?, name: String?, token: String?,
-                  callback: (game : String?, state : String?) -> Unit,
-                  errorCallback: (error: String?) -> Unit) {
-        apiRepository.startGame(game,name,token,{ state, gameId->
-            callback(state,gameId)
-        },errorCallback)
+    fun startGame(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (game: String?, state: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.startGame(game, name, token,
+            { state, gameId ->
+                callback(state, gameId)
+            },
+            errorCallback
+        )
     }
 
-
-    fun endGame(game: String?, name: String?, token: String?,
-                  callback: (game : String?, state : String?) -> Unit,
-                  errorCallback: (error: String?) -> Unit) {
-        apiRepository.endGame(game,name,token,{ state, gameId->
-            callback(state,gameId)
-        },errorCallback)
+    fun endGame(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (game: String?, state: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.endGame(game, name, token,
+            { state, gameId ->
+                callback(state, gameId)
+            },
+            errorCallback
+        )
     }
 
-    fun conquerPoint(game: String?, point: String?,team: String?,name: String?,token: String?,
-                     callback: (obj : JSONObject?) -> Unit
-                     ,errorCallback: (error: String?) -> Unit) {
-
-        apiRepository.conquerPoint(game, point,team,name,token,{ response->
-            callback(response)
-        },errorCallback)
-        }
-
-
+    fun conquerPoint(
+        game: String?,
+        point: String?,
+        team: String?,
+        name: String?,
+        token: String?,
+        callback: (obj: JSONObject?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.conquerPoint(game, point, team, name, token,
+            { response ->
+                callback(response)
+            },
+            errorCallback
+        )
+    }
 
     fun removePlayer(
         game: String?,
@@ -251,13 +274,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (game: String, name: String?) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.removePlayer(game, name, token, { gameId, playerName ->
-            if (game != null) {
-                callback(gameId!!, playerName)
-            }
-        }, errorCallback)
+        apiRepository.removePlayer(game, name, token,
+            { gameId, playerName ->
+                if (gameId != null) {
+                    callback(gameId,playerName)
+                }
+            },
+            errorCallback
+        )
     }
-
-
-
 }

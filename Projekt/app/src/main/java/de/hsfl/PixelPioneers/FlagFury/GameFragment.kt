@@ -73,9 +73,13 @@ class GameFragment : Fragment() {
 
     val timer = object: CountDownTimer(10_000, 1_000) {
         override fun onTick(millisUntilFinished: Long) {
+            if(mainViewModel.discoveryEnabled.value == true){
+                mainViewModel.startDiscoverDevices()
                 connectToOpponents()
+            }
                 if (mainViewModel.isDefended.value == true || !checkConquerPoint(currentPoint!!, mainViewModel.currentPosition.value!!)) {
                     timerIsRunning = false
+                    mainViewModel.stopDiscoverDevices()
                     Log.d("Game","Das ist alte Punkt ${mainViewModel.oldConquerPointTeam.value}")
                     conquerPoint(currentPoint?.id, "${mainViewModel.oldConquerPointTeam.value}")
                     cancel()
@@ -85,6 +89,7 @@ class GameFragment : Fragment() {
 
 
         override fun onFinish() {
+            mainViewModel.stopDiscoverDevices()
             timerIsRunning = false
             currentPoint?.let {
                 if(mainViewModel.isDefended.value == false){
@@ -101,7 +106,8 @@ class GameFragment : Fragment() {
             mainViewModel.gameId.value,
             mainViewModel.name.value,
             mainViewModel.token.value,
-            { players ->                 players?.let {
+            { players ->
+                players?.let {
                         val playerJSONArray = it.getJSONArray("players")
                         val playerName = mainViewModel.name.value
                         var playerTeam: Int? = null
@@ -142,10 +148,10 @@ class GameFragment : Fragment() {
         mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
             it?.let { updateMarkerPosition(it)
                 for (point in currentPoints){
-                    if(checkConquerPoint(point,it) && !timerIsRunning && mainViewModel.isDefended.value == false){
+                    if(checkConquerPoint(point,it) && !timerIsRunning){
                         timer.start()
                         timerIsRunning = true
-                        mainViewModel.oldConquerPointTeam.value = "${point.team}"
+                        mainViewModel.setOldConquerPointTeamValue("${point.team}")
                         conquerPoint(point.id, "-1")
                         currentPoint = point
                     }
@@ -222,10 +228,6 @@ class GameFragment : Fragment() {
     }
 
 
-
-
-
-
     private fun startPeriodicUpdate() {
         handler.postDelayed({
             getPlayers()
@@ -270,6 +272,9 @@ class GameFragment : Fragment() {
         val team = if (mainViewModel.team.value == 1) "blau" else "rot"
         Log.d("GameFragment","Team is : $team")
         if (devices != null) {
+            for(device in devices){
+                mainViewModel.connectToServer(device,team)
+            }
             mainViewModel.setIsDefended(true)
         } else {
             mainViewModel.setIsDefended(false)
