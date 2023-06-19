@@ -38,13 +38,11 @@ class BluetoothRepository {
 
     fun startDiscovery(app: Application) {
         app.registerReceiver(discoveryReceiver, discoveryFilter)
-        app.registerReceiver(disconectReceiver,disconectionFilter)
         _bluetoothAdapter.startDiscovery()
     }
 
     fun cancelDiscovery(app: Application) {
         app.unregisterReceiver(discoveryReceiver)
-        app.unregisterReceiver(disconectReceiver)
         _bluetoothAdapter.cancelDiscovery()
     }
 
@@ -128,18 +126,8 @@ class BluetoothRepository {
         }
     }
 
-    private val disconectReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == BluetoothDevice.ACTION_ACL_DISCONNECGTED) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                device?.let { disconectedCallback(it) }
-            }
-        }
-    }
 
     var discoveryCallback: (BluetoothDevice) -> Unit = {}
     val discoveryFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
 
-    var disconectedCallback: (BluetoothDevice) -> Unit = {}
-    val disconectionFilter = IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECGTED)
 }

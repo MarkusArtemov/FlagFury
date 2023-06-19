@@ -12,32 +12,20 @@ import org.json.JSONObject
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
-        @SuppressLint("SuspiciousIndentation")
         private val bluetoothRepository = BluetoothRepository.getInstance().apply {
             discoveryCallback = {device ->
-                val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
-                    updatedList.add(device)
-                    _discoveredDevices.postValue(updatedList)
-
-            }
-
-            disconectedCallback = {device ->
-                val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
-
-                    updatedList.remove(device)
-                    _discoveredDevices.postValue(updatedList)
-
+                val updatedMap = _discoveredDevices.value ?: hashMapOf()
+                updatedMap[device.address] = device
+                _discoveredDevices.postValue(updatedMap)
             }
         }
-
-
 
     private val _isHost = MutableLiveData<Boolean>()
     val isHost: LiveData<Boolean>
         get() = _isHost
 
-    private val _discoveredDevices = MutableLiveData<List<BluetoothDevice>>()
-    val discoveredDevices: LiveData<List<BluetoothDevice>>
+    private val _discoveredDevices = MutableLiveData<HashMap<String, BluetoothDevice>>()
+    val discoveredDevices: LiveData<HashMap<String, BluetoothDevice>>
         get() = _discoveredDevices
 
     private val _oldConquerPointTeam = MutableLiveData<String>()
@@ -112,6 +100,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val message = if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
                 Log.d("Mainviewmodel", "Defended ist tatsächlich : $defended")
                 _isDefended.postValue(defended)
+                Log.e("wirklicher wert","${isDefended.value}")
                 _lastMessage.postValue(message)
                 Log.d("MainViewModel", "Verbindung zum Server erfolgreich: isDefended=$defended")
             },
