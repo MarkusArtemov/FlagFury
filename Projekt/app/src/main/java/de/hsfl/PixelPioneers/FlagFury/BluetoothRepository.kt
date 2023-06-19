@@ -24,27 +24,27 @@ class BluetoothRepository {
                 instance ?: BluetoothRepository().also { instance = it }
             }
         }
+
+        fun generateUUIDFromTeamName(teamName: String): UUID {
+            val nameUUID = UUID.nameUUIDFromBytes(teamName.toByteArray())
+            return UUID(0x00001101_0000_1000_8000L, nameUUID.leastSignificantBits)
+        }
     }
 
     private var isServerActive = false
     private val _bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    private val redUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FC")
-    private val blueUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FD")
-
-    private val teamUUIDs = mapOf(
-        "rot" to redUUID,
-        "blau" to blueUUID
-    )
 
     private val serverSockets = mutableMapOf<String, BluetoothServerSocket?>()
 
     fun startDiscovery(app: Application) {
         app.registerReceiver(discoveryReceiver, discoveryFilter)
+        app.registerReceiver(disconectReceiver,disconectionFilter)
         _bluetoothAdapter.startDiscovery()
     }
 
     fun cancelDiscovery(app: Application) {
         app.unregisterReceiver(discoveryReceiver)
+        app.unregisterReceiver(disconectReceiver)
         _bluetoothAdapter.cancelDiscovery()
     }
 
@@ -57,19 +57,15 @@ class BluetoothRepository {
         val clientThread = Thread {
             var socket: BluetoothSocket? = null
             try {
-                val serverUuid = teamUUIDs[team]
-                if (serverUuid != null) {
-                    socket = serverDevice.createRfcommSocketToServiceRecord(serverUuid)
-                    socket.connect()
-                    responseCallback(true)
-                } else {
-                    val errorMessage = "Invalid team UUID for team $team"
-                    errorCallback(errorMessage)
-                    responseCallback(false)
-                }
+                val serverUuid = generateUUIDFromTeamName(team)
+                socket = serverDevice.createRfcommSocketToServiceRecord(serverUuid)
+                socket.connect()
+                responseCallback(true)
             } catch (e: IOException) {
                 val errorMessage = e.message ?: "Unknown error occurred"
-                if (errorMessage.contains("address of service does not exist")) {
+                if (errorMessage.contains("service is currently in use")) {
+                    responseCallback(true)
+                } else if (errorMessage.contains("address of service does not exist")) {
                     errorCallback(errorMessage)
                     responseCallback(false)
                 } else {
@@ -80,13 +76,13 @@ class BluetoothRepository {
                     try {
                         it.close()
                     } catch (e: IOException) {
-                        // Handle exception if necessary
                     }
                 }
             }
         }
         clientThread.start()
     }
+
 
     fun startServer(
         team: String,
@@ -95,20 +91,18 @@ class BluetoothRepository {
     ) {
         val serverThread = Thread {
             try {
+                Log.d("BluetoothRepo","Server erfolgreich gestartet mit $team")
                 isServerActive = true
-                val serverUuid = teamUUIDs[team]
-                if (serverUuid != null) {
-                    val serverSocket = _bluetoothAdapter.listenUsingRfcommWithServiceRecord("FlagFuryServer_$team", serverUuid)
-                    serverSockets[team] = serverSocket
+                val serverUuid = generateUUIDFromTeamName(team)
+                val serverSocket = _bluetoothAdapter.listenUsingRfcommWithServiceRecord("FlagFuryServer_$team", serverUuid)
+                serverSockets[team] = serverSocket
 
-                    while (isServerActive) {
-                        val socket = serverSocket.accept()
-                        socket.close()
-                    }
-                } else {
-                    errorCallback(Error("Invalid team UUID for team $team"))
+                while (isServerActive) {
+                    val socket = serverSocket.accept()
+                    socket.close()
                 }
             } catch (e: IOException) {
+                Log.d("BluetoothRepo","Server nicht erfolgreich gestartet")
                 errorCallback(Error(e.message))
                 isServerActive = false
             } finally {
@@ -134,6 +128,18 @@ class BluetoothRepository {
         }
     }
 
+    private val disconectReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == BluetoothDevice.ACTION_ACL_DISCONNECGTED) {
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                device?.let { disconectedCallback(it) }
+            }
+        }
+    }
+
     var discoveryCallback: (BluetoothDevice) -> Unit = {}
     val discoveryFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+
+    var disconectedCallback: (BluetoothDevice) -> Unit = {}
+    val disconectionFilter = IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECGTED)
 }

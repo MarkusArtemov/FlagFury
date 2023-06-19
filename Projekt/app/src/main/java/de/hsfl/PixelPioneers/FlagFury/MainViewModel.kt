@@ -1,5 +1,6 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -11,7 +12,25 @@ import org.json.JSONObject
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
-    private val bluetoothRepository = BluetoothRepository.getInstance()
+        @SuppressLint("SuspiciousIndentation")
+        private val bluetoothRepository = BluetoothRepository.getInstance().apply {
+            discoveryCallback = {device ->
+                val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
+                    updatedList.add(device)
+                    _discoveredDevices.postValue(updatedList)
+
+            }
+
+            disconectedCallback = {device ->
+                val updatedList = _discoveredDevices.value?.toMutableList() ?: mutableListOf()
+
+                    updatedList.remove(device)
+                    _discoveredDevices.postValue(updatedList)
+
+            }
+        }
+
+
 
     private val _isHost = MutableLiveData<Boolean>()
     val isHost: LiveData<Boolean>
@@ -91,6 +110,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         bluetoothRepository.connectToServer(serverDevice, team,
             { defended ->
                 val message = if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
+                Log.d("Mainviewmodel", "Defended ist tatsächlich : $defended")
                 _isDefended.postValue(defended)
                 _lastMessage.postValue(message)
                 Log.d("MainViewModel", "Verbindung zum Server erfolgreich: isDefended=$defended")
@@ -108,7 +128,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun startServer() {
-        val team = if (_team.value == 1) "blau" else "rot"
+        val team = if (_team.value == 1) "rot" else "blau"
         bluetoothRepository.startServer(team,
             { clientGameId, clientName ->
                 val isAttacking = false
