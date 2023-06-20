@@ -7,3 +7,6 @@ Mitglied 2
 Markus Artemov
 710671
 markus.artemov@stud.hs-flensburg.de
+
+
+Die Aufgaben wurden trotz der ungleich verteilten Commits von uns beiden in gleichem Maß bearbeitet.
