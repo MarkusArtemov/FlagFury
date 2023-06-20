@@ -7,6 +7,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.lokibt.bluetooth.BluetoothDevice
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONObject
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -32,9 +35,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val oldConquerPointTeam: LiveData<String>
         get() = _oldConquerPointTeam
 
-    private val _isDefended = MutableLiveData<Boolean>()
-    val isDefended: LiveData<Boolean>
-        get() = _isDefended
+    private val _isDefended = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 1).also { it.tryEmit(false) }
+    val isDefended: SharedFlow<Boolean> = _isDefended.asSharedFlow()
 
     private val _discoveryEnabled = MutableLiveData<Boolean>()
     val discoveryEnabled: LiveData<Boolean>
@@ -78,7 +80,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         _isHost.value = false
-        _isDefended.value = false
     }
 
     fun setIsHost(isHost: Boolean) {
@@ -99,8 +100,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             { defended ->
                 val message = if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
                 Log.d("Mainviewmodel", "Defended ist tatsächlich : $defended")
-                _isDefended.postValue(defended)
-                Log.e("wirklicher wert","${isDefended.value}")
+                _isDefended.tryEmit(defended)
                 _lastMessage.postValue(message)
                 Log.d("MainViewModel", "Verbindung zum Server erfolgreich: isDefended=$defended")
             },
@@ -165,9 +165,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _currentPosition.value = currentPosition
     }
 
-    fun setIsDefended(state: Boolean) {
-        _isDefended.value = state
-    }
 
     fun registerGame(
         name: String,

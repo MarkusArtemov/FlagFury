@@ -63,11 +63,9 @@ class BluetoothRepository {
                 val errorMessage = e.message ?: "Unknown error occurred"
                 if (errorMessage.contains("service is currently in use")) {
                     responseCallback(true)
-                } else if (errorMessage.contains("address of service does not exist")) {
-                    errorCallback(errorMessage)
-                    responseCallback(false)
                 } else {
                     errorCallback(errorMessage)
+                    responseCallback(false)
                 }
             } finally {
                 socket?.let {

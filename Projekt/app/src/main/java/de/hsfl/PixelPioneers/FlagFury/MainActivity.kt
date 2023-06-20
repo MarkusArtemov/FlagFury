@@ -117,7 +117,8 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
                         .show()
                     mainViewModel.startServer()
-                    mainViewModel.setDiscoverEnabled(true)
+                    mainViewModel.startDiscoverDevices()
+//                    mainViewModel.setDiscoverEnabled(true)
                 } else {
                     Toast.makeText(
                         this,
