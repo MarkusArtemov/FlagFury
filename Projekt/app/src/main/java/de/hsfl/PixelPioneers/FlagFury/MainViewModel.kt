@@ -21,6 +21,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 updatedMap[device.address] = device
                 _discoveredDevices.postValue(updatedMap)
             }
+
+            disconectedCallback = { device ->
+                val updatedMap = _discoveredDevices.value ?: hashMapOf()
+                updatedMap.remove(device.address)
+                _discoveredDevices.postValue(updatedMap)
+            }
         }
 
     private val _isHost = MutableLiveData<Boolean>()
@@ -129,7 +135,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun stopServer() {
-        val team = if (_team.value == 1) "blau" else "rot"
+        val team = if (_team.value == 1) "rot" else "blau"
         bluetoothRepository.stopServer(team)
     }
 

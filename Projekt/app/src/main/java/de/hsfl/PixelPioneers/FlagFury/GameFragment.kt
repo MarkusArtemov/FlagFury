@@ -377,6 +377,13 @@ class GameFragment : Fragment() {
         return flagMarker
     }
 
+    override fun onDestroyView() {
+        mainViewModel.stopServer()
+        mainViewModel.startDiscoverDevices()
+        stopPeriodicUpdate()
+        super.onDestroyView()
+    }
+
     private fun setViewConstraints(
         flagMarker: ImageView,
         markerPosX: Double,
