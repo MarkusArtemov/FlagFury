@@ -22,7 +22,6 @@ class WinRedFragment : Fragment() {
 
         closeButton.setOnClickListener {
             mainViewModel.setIsHost(false)
-            mainViewModel.stopServer()
             navController.navigate(R.id.action_winRedFragment_to_homeScreen)
         }
         return binding.root

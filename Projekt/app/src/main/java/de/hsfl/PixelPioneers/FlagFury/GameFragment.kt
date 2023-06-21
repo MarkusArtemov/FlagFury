@@ -34,7 +34,6 @@ class GameFragment : Fragment() {
     private val handler = Handler(Looper.getMainLooper())
     private var currentPoints: List<Point> = emptyList()
     private var timerIsRunning = false
-    private var endGame = false
     private var currentPoint: Point? = null
     private var _isDefended = false
 
@@ -179,8 +178,7 @@ class GameFragment : Fragment() {
             mainViewModel.name.value,
             mainViewModel.token.value,
             { points, state, game ->
-               if(state == "2" && !endGame){
-                   endGame=true
+               if(state == "2"){
                    points?.let {
                        if(checkAllPointsSameTeam(points,1)){
                            findNavController().navigate(R.id.action_gameFragment_to_winRedFragment)
@@ -375,6 +373,13 @@ class GameFragment : Fragment() {
         flagMarker.setImageResource(imageResource)
         flagMarker.layoutParams = ViewGroup.LayoutParams(markerSize, markerSize)
         return flagMarker
+    }
+
+    override fun onDestroyView() {
+        mainViewModel.stopServer()
+        mainViewModel.startDiscoverDevices()
+        stopPeriodicUpdate()
+        super.onDestroyView()
     }
 
     private fun setViewConstraints(

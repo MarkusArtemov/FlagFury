@@ -23,7 +23,6 @@ class WinBlueFragment : Fragment() {
 
         closeButton.setOnClickListener {
             mainViewModel.setIsHost(false)
-            mainViewModel.stopServer()
             navController.navigate(R.id.action_winBlueFragment_to_homeScreen)
         }
         return binding.root
