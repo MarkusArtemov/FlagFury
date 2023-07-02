@@ -1,6 +1,5 @@
 package de.hsfl.PixelPioneers.FlagFury
 
-import android.location.Location
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -16,16 +15,9 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import com.lokibt.bluetooth.BluetoothDevice
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
-import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
-import kotlin.concurrent.timer
 
 class GameFragment : Fragment() {
     private lateinit var binding: FragmentGameBinding
@@ -35,8 +27,7 @@ class GameFragment : Fragment() {
     private var currentPoints: List<Point> = emptyList()
     private var timerIsRunning = false
     private var currentPoint: Point? = null
-    private var _isDefended = false
-    private var gameOver = false
+    private var isDefended = false
 
 
     override fun onCreateView(
@@ -83,14 +74,14 @@ class GameFragment : Fragment() {
 
 
 
-    val timer = object: CountDownTimer(10_000, 1_000) {
+    private val timer = object: CountDownTimer(10_000, 1_000) {
         override fun onTick(millisUntilFinished: Long) {
             if(LocationUtils.checkConquerPoint(currentPoint!!,mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)){
                     connectToOpponents()
             }
                 if (
                 !LocationUtils.checkConquerPoint(currentPoint!!, mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)
-                || _isDefended
+                || isDefended
                 ) {
                 conquerPoint(currentPoint?.id, "${mainViewModel.oldConquerPointTeam.value}")
                 cancel()
@@ -110,36 +101,6 @@ class GameFragment : Fragment() {
     }
 
 
-        private fun getPlayers() {
-           mainViewModel.getPlayers(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { players ->
-                players?.let {
-                        val playerJSONArray = it.getJSONArray("players")
-                        val playerName = mainViewModel.name.value
-                        val playerTeam: Int?
-
-                        for (i in 0 until playerJSONArray.length()) {
-                            val player = playerJSONArray.getJSONObject(i)
-                            val currentPlayerName = player.getString("name")
-                            val currentPlayerTeam = player.getInt("team")
-
-                            if (currentPlayerName == playerName) {
-                                playerTeam = currentPlayerTeam
-                                mainViewModel.setTeam(playerTeam)
-                                break
-                            }
-                        }
-                }
-            },
-            { error ->
-                error?.let { showErrorToast(it) }
-            }
-        )
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -153,16 +114,16 @@ class GameFragment : Fragment() {
     }
 
     private fun observeLiveData() {
-        mainViewModel.isDefended.observe(viewLifecycleOwner) { isDefended ->
-            _isDefended = isDefended
-            Log.d("GameFragmet","is defended $_isDefended")
+        mainViewModel.isDefended.observe(viewLifecycleOwner) { defended ->
+            isDefended = defended
+            Log.d("GameFragmet","is defended $isDefended")
         }
 
-        mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
+        mainViewModel.currentPosition.observe(viewLifecycleOwner) {
             it?.let {
                 handlePositionUpdate(it)
             }
-        })
+        }
     }
 
     private fun handlePositionUpdate(position: Pair<Double, Double>) {
@@ -194,26 +155,17 @@ class GameFragment : Fragment() {
     }
 
     private fun askForConquestPoints(callback: (points: List<Point>) -> Unit) {
-        mainViewModel.getPoints(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { points, state, game ->
-                handleConquestPoints(points, state, game, callback)
-            },
-            { error ->
-                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
-            }
-        )
+        mainViewModel.getPoints { points, state ->
+                handleConquestPoints(points,state,callback)
+        }
     }
 
     private fun handleConquestPoints(
         points: List<Point>?,
         state: String?,
-        game: String?,
         callback: (points: List<Point>) -> Unit
     ) {
-        if (state == "2" && !gameOver) {
+        if (state == "2") {
             handleGameOver(points)
         }
 
@@ -223,12 +175,14 @@ class GameFragment : Fragment() {
     }
 
     private fun handleGameOver(points: List<Point>?) {
-        gameOver = true
         points?.let {
-            if (checkAllPointsSameTeam(points, 1)) {
-                navigateToWinFragment(R.id.action_gameFragment_to_winRedFragment)
-            } else if (checkAllPointsSameTeam(points, 2)) {
-                navigateToWinFragment(R.id.action_gameFragment_to_winBlueFragment)
+            val navController = findNavController()
+            if(navController.currentDestination?.id == R.id.gameFragment) {
+                if (checkAllPointsSameTeam(points, 1)) {
+                    navigateToWinFragment(R.id.action_gameFragment_to_winRedFragment)
+                } else if (checkAllPointsSameTeam(points, 2)) {
+                    navigateToWinFragment(R.id.action_gameFragment_to_winBlueFragment)
+                }
             }
         }
     }
@@ -262,7 +216,7 @@ class GameFragment : Fragment() {
             { game,state ->
                 Log.d("Lobby","State changed in Game $game to $state")
             },
-            { error ->
+            { _ ->
                 showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
             }
         )
@@ -271,7 +225,7 @@ class GameFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            getPlayers()
+            mainViewModel.getPlayers()
             askForConquestPoints { points ->
                 currentPoints = points
                 updateFlagStatus(points)
@@ -341,7 +295,6 @@ class GameFragment : Fragment() {
     private fun updateMarkerViewPosition(
         markerPosition: Pair<Double, Double>,
     ) {
-
         val markerViewWidth = binding.target.width
         val markerViewHeight = binding.target.height
         val mapImageWidth = binding.campusCard.width

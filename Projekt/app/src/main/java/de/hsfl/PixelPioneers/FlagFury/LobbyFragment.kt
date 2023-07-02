@@ -63,6 +63,20 @@ class LobbyFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val navController = findNavController()
+
+        mainViewModel.players.observe(viewLifecycleOwner){ players ->
+            Log.d("players",players.toString())
+            playerAdapter.updateList(players)
+        }
+
+        mainViewModel.state.observe(viewLifecycleOwner){ state ->
+            if(state == "1" && navController.currentDestination?.id == R.id.lobbyFragment) {
+                (activity as MainActivity).startServerAndDiscovery()
+                navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
+            }
+        }
+
         startPeriodicUpdate()
     }
 
@@ -87,22 +101,7 @@ class LobbyFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            mainViewModel.getPlayers(mainViewModel.gameId.value, mainViewModel.name.value, mainViewModel.token.value, { players ->
-                players?.let {
-                    val playerList = it.getJSONArray("players")
-                    val state = it.getString("state")
-                    val navController = findNavController()
-                    if(state == "1" && navController.currentDestination?.id == R.id.lobbyFragment) {
-                        (activity as MainActivity).startServerAndDiscovery()
-                        navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
-                    }
-
-                    val convertedList = jsonArrayToList(playerList)
-                    playerAdapter.updateList(convertedList)
-                }
-            }, { error ->
-                error?.let { showErrorToast(it) }
-            })
+            mainViewModel.getPlayers()
             startPeriodicUpdate()
         }, updateInterval)
     }
@@ -113,14 +112,5 @@ class LobbyFragment : Fragment() {
 
     private fun stopPeriodicUpdate() {
         handler.removeCallbacksAndMessages(null)
-    }
-
-    private fun jsonArrayToList(jsonArray: JSONArray): List<JSONObject> {
-        val list = mutableListOf<JSONObject>()
-        for (i in 0 until jsonArray.length()) {
-            val jsonObject = jsonArray.getJSONObject(i)
-            list.add(jsonObject)
-        }
-        return list
     }
 }

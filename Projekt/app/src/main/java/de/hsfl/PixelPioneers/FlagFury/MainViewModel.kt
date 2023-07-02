@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,6 +13,7 @@ import com.lokibt.bluetooth.BluetoothDevice
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import org.json.JSONArray
 import org.json.JSONObject
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -25,6 +27,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _discoveredDevices.postValue(updatedMap)
             }
         }
+
+    private val _state = MutableLiveData<String>()
+    val state: LiveData<String>
+        get() = _state
 
     private val _isDefended = MutableLiveData<Boolean>(false)
     val isDefended: LiveData<Boolean>
@@ -59,8 +65,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val team: LiveData<Int>
         get() = _team
 
-    private val _players = MutableLiveData<JSONObject>()
-    val players: LiveData<JSONObject>
+    private val _players = MutableLiveData<List<JSONObject>>()
+    val players: LiveData<List<JSONObject>>
         get() = _players
 
     private val _currentPosition = MutableLiveData<Pair<Double, Double>>()
@@ -166,6 +172,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _currentPosition.value = currentPosition
     }
 
+    private fun showErrorToast(error: String) {
+        Toast.makeText(getApplication(), error, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun jsonArrayToList(jsonArray: JSONArray): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            list.add(jsonObject)
+        }
+        return list
+    }
+
 
     fun registerGame(
         name: String,
@@ -197,33 +216,44 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    fun getPlayers(
-        gameId: String?,
-        name: String?,
-        token: String?,
-        callback: (players: JSONObject?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.getPlayers(gameId, name, token,
+    fun getPlayers() {
+        apiRepository.getPlayers(gameId.value, name.value, token.value,
             { players ->
-                callback(players)
-            },
-            errorCallback
+                players?.let {
+                    val playerJSONArray = it.getJSONArray("players")
+                    _state.value = it.getString("state")
+                    val playerName = name.value
+                    val playerTeam: Int?
+                    val playersList = jsonArrayToList(playerJSONArray)
+
+                    for (i in 0 until playerJSONArray.length()) {
+                        val player = playerJSONArray.getJSONObject(i)
+                        val currentPlayerName = player.getString("name")
+                        val currentPlayerTeam = player.getInt("team")
+
+                        if (currentPlayerName == playerName) {
+                            playerTeam = currentPlayerTeam
+                            setTeam(playerTeam)
+                            break
+                        }
+                    }
+                    _players.value = playersList
+                }
+            },{ error ->
+                error?.let { showErrorToast(it) }
+            }
         )
     }
 
-    fun getPoints(
-        gameId: String?,
-        name: String?,
-        token: String?,
-        callback: (points: List<Point>?, state: String?, game: String?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.getPoints(gameId, name, token,
+
+
+    fun getPoints(callback: (points: List<Point>?, state : String?) -> Unit) {
+        apiRepository.getPoints(gameId.value, name.value, token.value,
             { points, state, game ->
-                callback(points, state, game)
-            },
-            errorCallback
+                callback(points,state)
+            },{ error->
+                error?.let { showErrorToast(it) }
+            }
         )
     }
 

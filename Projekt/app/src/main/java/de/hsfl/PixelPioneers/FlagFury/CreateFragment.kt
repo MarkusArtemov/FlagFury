@@ -42,7 +42,9 @@ class CreateFragment : Fragment() {
                     mainViewModel.setToken(token)
                     mainViewModel.setName(name.text.toString())
                     mainViewModel.setIsHost(true)
-                    navController.navigate(R.id.action_createFragment_to_lobbyFragment)
+                    if(navController.currentDestination?.id == R.id.createFragment){
+                        navController.navigate(R.id.action_createFragment_to_lobbyFragment)
+                    }
                 },
                 { error ->
                     error?.let { showErrorToast(it) }
@@ -81,8 +83,6 @@ class CreateFragment : Fragment() {
         location?.let { it ->
             updateMarkerPosition(Pair(it.first, it.second))
             val markerPosition = mainViewModel.markerPosition.value
-            val mapImageWidth = binding.campusCard.width
-            val mapImageHeight = binding.campusCard.height
             markerPosition?.let { updateMarkerViewPosition(it) }
             binding.target.visibility = View.VISIBLE
         }
