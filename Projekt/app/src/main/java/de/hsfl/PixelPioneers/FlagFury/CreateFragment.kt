@@ -25,7 +25,7 @@ class CreateFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentCreateBinding.inflate(inflater, container, false)
         val navController = findNavController()
         val lobbyButton: Button = binding.buttonCreateGame
@@ -68,80 +68,66 @@ class CreateFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         mainViewModel.currentPosition.observe(viewLifecycleOwner) { currentPosition ->
-            Log.d("position", "Pooositiooon ${currentPosition}")
             updateLocationMarker(currentPosition)
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d("de.hsfl.PixelPioneers.FlagFury.CreateFragment", "Periodic updates paused")
-    }
-
     private fun updateMarkerPosition(location: Pair<Double, Double>) {
-        val tlLatitude = 54.778514
-        val tlLongitude = 9.442749
-        val brLatitude = 54.769009
-        val brLongitude = 9.464722
-
-        val posX = (location.first - tlLongitude) / (brLongitude - tlLongitude)
-        val posY = (location.second - tlLatitude) / (brLatitude - tlLatitude)
-
-        val markerPosition = Pair(posX, posY)
+        val markerPosition = LocationUtils.generatePosition(Pair(location.first, location.second))
         mainViewModel.setMarkerPosition(markerPosition)
     }
 
     private fun updateLocationMarker(location: Pair<Double, Double>?) {
         location?.let { it ->
             updateMarkerPosition(Pair(it.first, it.second))
-            Log.d("Locationvergleich create", " longi : ${location.first} lati : ${location.second}")
-            val markerPosition = mainViewModel.markerPosition?.value
-            Log.d("MarkerPosition", "$markerPosition")
+            val markerPosition = mainViewModel.markerPosition.value
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
-            markerPosition?.let { updateMarkerViewPosition(it, mapImageWidth, mapImageHeight) }
+            markerPosition?.let { updateMarkerViewPosition(it) }
             binding.target.visibility = View.VISIBLE
         }
     }
 
     private fun updateMarkerViewPosition(
         markerPosition: Pair<Double, Double>,
-        mapImageWidth: Int,
-        mapImageHeight: Int
     ) {
+
         val markerViewWidth = binding.target.width
         val markerViewHeight = binding.target.height
+        val mapImageWidth = binding.campusCard.width
+        val mapImageHeight = binding.campusCard.height
 
-        val markerPosX = markerPosition.first * mapImageWidth - markerViewWidth / 2
-        val markerPosY = markerPosition.second * mapImageHeight - markerViewHeight / 2
+        val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerViewWidth)
+        val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
 
-        binding.target.x = markerPosX.toFloat()
-        binding.target.y = markerPosY.toFloat()
+        with(binding.target) {
+            x = markerPosX
+            y = markerPosY
+        }
     }
 
     private fun addFlagMarker(
         currentPosition: Pair<Double, Double>?,
         markerPosition: Pair<Double, Double>?
     ) {
-        currentPosition?.let { currentPosition -> conquestPoints.add(currentPosition) }
+        currentPosition?.let { position -> conquestPoints.add(position) }
         val markerSize = 20
         markerPosition?.let {
-            val flagMarker = createFlagMarker(markerSize, R.drawable.circle_grey)
+            val flagMarker = createFlagMarker(R.drawable.circle_grey)
             binding.constraintLayout.addView(flagMarker)
 
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
 
-            val markerPosX = (markerPosition.first * mapImageWidth) - (markerSize / 2)
-            val markerPosY = markerPosition.second * mapImageHeight - markerSize / 2
+            val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerSize)
+            val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerSize)
 
-            Log.d("Position im Fragment", "$markerPosX $markerPosY")
-
-            setViewConstraints(flagMarker, markerPosX, markerPosY)
+            setViewConstraints(flagMarker, markerPosX.toDouble(), markerPosY.toDouble())
         }
     }
 
-    private fun createFlagMarker(markerSize: Int, picture: Int): ImageView {
+    private fun createFlagMarker( picture: Int): ImageView {
+        val markerSize = 20
         val flagMarker = ImageView(requireContext())
         flagMarker.id = View.generateViewId()
         flagMarker.setImageResource(picture)

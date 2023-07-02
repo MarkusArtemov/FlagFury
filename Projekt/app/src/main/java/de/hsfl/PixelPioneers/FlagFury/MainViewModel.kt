@@ -3,9 +3,11 @@ package de.hsfl.PixelPioneers.FlagFury
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.lokibt.bluetooth.BluetoothDevice
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -15,19 +17,19 @@ import org.json.JSONObject
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val apiRepository = ApiRepository.getInstance(app)
-        private val bluetoothRepository = BluetoothRepository.getInstance().apply {
+
+    private val bluetoothRepository = BluetoothRepository.getInstance().apply {
             discoveryCallback = {device ->
                 val updatedMap = _discoveredDevices.value ?: hashMapOf()
                 updatedMap[device.address] = device
                 _discoveredDevices.postValue(updatedMap)
             }
-
-            disconectedCallback = { device ->
-                val updatedMap = _discoveredDevices.value ?: hashMapOf()
-                updatedMap.remove(device.address)
-                _discoveredDevices.postValue(updatedMap)
-            }
         }
+
+    private val _isDefended = MutableLiveData<Boolean>(false)
+    val isDefended: LiveData<Boolean>
+        get() = _isDefended
+
 
     private val _isHost = MutableLiveData<Boolean>()
     val isHost: LiveData<Boolean>
@@ -40,13 +42,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _oldConquerPointTeam = MutableLiveData<String>()
     val oldConquerPointTeam: LiveData<String>
         get() = _oldConquerPointTeam
-
-    private val _isDefended = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 1).also { it.tryEmit(false) }
-    val isDefended: SharedFlow<Boolean> = _isDefended.asSharedFlow()
-
-    private val _discoveryEnabled = MutableLiveData<Boolean>()
-    val discoveryEnabled: LiveData<Boolean>
-        get() = _discoveryEnabled
 
     private val _name = MutableLiveData<String>()
     val name: LiveData<String>
@@ -77,15 +72,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         get() = _markerPosition
 
     private val _lastMessage = MutableLiveData<String>()
-    val lastMessage: LiveData<String>
-        get() = _lastMessage
 
     private val _lastErrorMessage = MutableLiveData<Error>()
-    val lastErrorMessage: LiveData<Error>
-        get() = _lastErrorMessage
+
+    private var currentToast: Toast? = null
+
+    private val messageObserver = Observer<String> { message ->
+        currentToast?.cancel()
+        Log.d("MainviewModel",message)
+        currentToast?.show()
+    }
+
+    private val errorObserver = Observer<Error> { error ->
+        val message = if (error.message!!.contains("server is already in use")) {
+            "Eroberungspunkt wird verteidigt"
+        } else {
+            "Es ist ein Fehler bei der Verbindung zum Server aufgetreten"
+        }
+
+        Log.d("MainViewModel", message)
+    }
 
     init {
         _isHost.value = false
+        _lastMessage.observeForever(messageObserver)
+        _lastErrorMessage.observeForever(errorObserver)
+    }
+
+    fun setName(name: String) {
+        _name.value = name
+    }
+
+    fun setToken(token: String) {
+        _token.value = token
+    }
+
+    fun setGameId(gameId: String) {
+        _gameId.value = gameId
+    }
+
+    fun setTeam(team: Int) {
+        _team.value = team
     }
 
     fun setIsHost(isHost: Boolean) {
@@ -105,18 +132,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         bluetoothRepository.connectToServer(serverDevice, team,
             { defended ->
                 val message = if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
-                Log.d("Mainviewmodel", "Defended ist tatsächlich : $defended")
-                _isDefended.tryEmit(defended)
+                _isDefended.postValue(defended)
                 _lastMessage.postValue(message)
-                Log.d("MainViewModel", "Verbindung zum Server erfolgreich: isDefended=$defended")
             },
             { error ->
                 _lastErrorMessage.postValue(Error(error))
-                Log.e("MainViewModel", "Fehler bei der Verbindung zum Server: $error")
             }
         )
     }
-
 
     fun setOldConquerPointTeamValue(team : String){
         _oldConquerPointTeam.value = team
@@ -124,43 +147,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun startServer() {
         val team = if (_team.value == 1) "rot" else "blau"
-        bluetoothRepository.startServer(team,
-            { clientGameId, clientName ->
-                val isAttacking = false
-                isAttacking
-            },
-            { error ->
-                _lastErrorMessage.postValue(Error(error.message))
-            })
+        bluetoothRepository.startServer(team
+        ) { error ->
+            _lastErrorMessage.postValue(Error(error.message))
+        }
     }
 
     fun stopServer() {
         val team = if (_team.value == 1) "rot" else "blau"
         bluetoothRepository.stopServer(team)
-    }
-
-    fun setDiscoverEnabled(state: Boolean) {
-        _discoveryEnabled.value = state
-    }
-
-    fun setName(name: String) {
-        _name.value = name
-    }
-
-    fun setToken(token: String) {
-        _token.value = token
-    }
-
-    fun setGameId(gameId: String) {
-        _gameId.value = gameId
-    }
-
-    fun setPlayers(players: JSONObject) {
-        _players.value = players
-    }
-
-    fun setTeam(team: Int) {
-        _team.value = team
     }
 
     fun setMarkerPosition(markerPosition: Pair<Double, Double>) {
@@ -288,9 +283,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         apiRepository.removePlayer(game, name, token,
             { gameId, playerName ->
-                if (gameId != null) {
-                    callback(gameId,playerName)
-                }
+                gameId?.let { callback(it,playerName) }
             },
             errorCallback
         )

@@ -1,5 +1,6 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +23,7 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
         return playerList.size
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateList(playerList: List<JSONObject>) {
        this.playerList = playerList
         notifyDataSetChanged()
@@ -33,11 +35,11 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
         fun bind(player: JSONObject) {
             val name = player.getString("name")
             val team = player.getInt("team")
-            val bluetoothStatus = player.getString("addr")
+            val bluetoothStatus = player.optString("addr")
 
             binding.name.text = name
             binding.team.text = team.toString()
-           if (bluetoothStatus != null && bluetoothStatus!="null") {
+           if (!bluetoothStatus.isNullOrEmpty()) {
                binding.bluetoothStatus.setImageResource(android.R.drawable.btn_star_big_on)
             }
 

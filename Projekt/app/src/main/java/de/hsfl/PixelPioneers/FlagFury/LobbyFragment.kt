@@ -24,7 +24,6 @@ class LobbyFragment : Fragment() {
     private lateinit var playerAdapter: PlayerAdapter
     private val updateInterval: Long = 1000
     private val handler = Handler(Looper.getMainLooper())
-    private var gameStart = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,6 +50,7 @@ class LobbyFragment : Fragment() {
 
 
         cancelButton.setOnClickListener {
+            mainViewModel.setIsHost(false)
             navController.navigate(R.id.action_lobbyFragment_to_homeScreen)
         }
 
@@ -68,7 +68,6 @@ class LobbyFragment : Fragment() {
 
     override fun onDestroyView() {
         stopPeriodicUpdate()
-        gameStart = false
         super.onDestroyView()
     }
 
@@ -92,10 +91,10 @@ class LobbyFragment : Fragment() {
                 players?.let {
                     val playerList = it.getJSONArray("players")
                     val state = it.getString("state")
-                    if(state == "1" && !gameStart){
-                        gameStart = true
+                    val navController = findNavController()
+                    if(state == "1" && navController.currentDestination?.id == R.id.lobbyFragment) {
                         (activity as MainActivity).startServerAndDiscovery()
-                        findNavController().navigate(R.id.action_lobbyFragment_to_gameFragment)
+                        navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
                     }
 
                     val convertedList = jsonArrayToList(playerList)

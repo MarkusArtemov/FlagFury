@@ -38,13 +38,11 @@ class BluetoothRepository {
 
     fun startDiscovery(app: Application) {
         app.registerReceiver(discoveryReceiver, discoveryFilter)
-        app.registerReceiver(disconectReceiver,disconectionFilter)
         _bluetoothAdapter.startDiscovery()
     }
 
     fun cancelDiscovery(app: Application) {
         app.unregisterReceiver(discoveryReceiver)
-        app.unregisterReceiver(disconectReceiver)
         _bluetoothAdapter.cancelDiscovery()
     }
 
@@ -74,7 +72,7 @@ class BluetoothRepository {
                 socket?.let {
                     try {
                         it.close()
-                    } catch (e: IOException) {
+                    } catch (_: IOException) {
                     }
                 }
             }
@@ -85,7 +83,6 @@ class BluetoothRepository {
 
     fun startServer(
         team: String,
-        callback: (Int, String) -> Boolean,
         errorCallback: (Error) -> Unit
     ) {
         val serverThread = Thread {
@@ -101,7 +98,6 @@ class BluetoothRepository {
                     socket.close()
                 }
             } catch (e: IOException) {
-                Log.d("BluetoothRepo","Server nicht erfolgreich gestartet")
                 errorCallback(Error(e.message))
                 isServerActive = false
             } finally {
@@ -128,19 +124,8 @@ class BluetoothRepository {
     }
 
 
-    private val disconectReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == BluetoothDevice.ACTION_ACL_DISCONNECGTED) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                device?.let { disconectedCallback(it) }
-            }
-        }
-    }
-
     var discoveryCallback: (BluetoothDevice) -> Unit = {}
-    val discoveryFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+    private val discoveryFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
 
-    var disconectedCallback: (BluetoothDevice) -> Unit = {}
-    val disconectionFilter = IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECGTED)
 
 }
