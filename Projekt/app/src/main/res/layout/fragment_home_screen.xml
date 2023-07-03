@@ -37,7 +37,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="72dp"
             android:text="@string/join_game"
-            android:backgroundTint="@color/dark_grey"
+            android:backgroundTint ="@color/dark_grey"
+            style="@style/CustomButton"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/hostGame"
             app:layout_constraintHorizontal_bias="0.3"
@@ -51,14 +52,12 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="72dp"
             android:text="@string/host_game"
-            android:backgroundTint="@color/dark_grey"
-            android:shadowColor = "@color/dark_grey"
-            android:elevation="40dp"
+            android:backgroundTint ="@color/dark_grey"
+            style="@style/CustomButton"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </FrameLayout>
