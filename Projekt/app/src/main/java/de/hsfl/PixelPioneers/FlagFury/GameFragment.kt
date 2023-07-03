@@ -304,8 +304,8 @@ class GameFragment : Fragment() {
         val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
 
         with(binding.target) {
-            x = markerPosX
-            y = markerPosY
+            x = markerPosX.toFloat()
+            y = markerPosY.toFloat()
         }
     }
 

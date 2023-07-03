@@ -38,7 +38,7 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
             val bluetoothStatus = player.optString("addr")
 
             binding.name.text = name
-            binding.team.text = team.toString()
+            binding.team.text = if (team == 1) "Rot" else "Blau"
            if (!bluetoothStatus.isNullOrEmpty()) {
                binding.bluetoothStatus.setImageResource(android.R.drawable.btn_star_big_on)
             }

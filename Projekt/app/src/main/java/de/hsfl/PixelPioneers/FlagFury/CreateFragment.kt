@@ -1,12 +1,9 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -22,6 +19,7 @@ class CreateFragment : Fragment() {
     private lateinit var binding: FragmentCreateBinding
     private val conquestPoints: MutableList<Pair<Double, Double>> = mutableListOf()
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -58,10 +56,26 @@ class CreateFragment : Fragment() {
 
         setFlagButton.setOnClickListener {
             addFlagMarker(
-                mainViewModel.currentPosition.value,
                 mainViewModel.markerPosition.value
             )
         }
+        val gestureDetector = GestureDetector(context, object: GestureDetector.SimpleOnGestureListener() {
+            override fun onLongPress(e: MotionEvent) {
+                Log.d("Create","Point created")
+                val touchX = e.x / binding.campusCard.width
+                val touchY = e.y / binding.campusCard.height
+                val mapCoordinate = Pair(touchX.toDouble(), touchY.toDouble())
+                Log.d("Create","$mapCoordinate")
+                addFlagMarker(mapCoordinate)
+            }
+        })
+
+        binding.campusCard.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+
+
 
         return binding.root
     }
@@ -101,16 +115,18 @@ class CreateFragment : Fragment() {
         val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
 
         with(binding.target) {
-            x = markerPosX
-            y = markerPosY
+            x = markerPosX.toFloat()
+            y = markerPosY.toFloat()
         }
     }
 
     private fun addFlagMarker(
-        currentPosition: Pair<Double, Double>?,
         markerPosition: Pair<Double, Double>?
     ) {
-        currentPosition?.let { position -> conquestPoints.add(position) }
+        markerPosition?.let { position ->
+            val newPos = LocationUtils.reverseGeneratePosition(position.first,position.second)
+            conquestPoints.add(newPos)
+        }
         val markerSize = 20
         markerPosition?.let {
             val flagMarker = createFlagMarker(R.drawable.circle_grey)
@@ -119,14 +135,16 @@ class CreateFragment : Fragment() {
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
 
-            val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerSize)
-            val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerSize)
+            val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerSize)
+            val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerSize)
 
             setViewConstraints(flagMarker, markerPosX.toDouble(), markerPosY.toDouble())
         }
     }
 
+
     private fun createFlagMarker( picture: Int): ImageView {
+        Log.d("j","wird eigentlich auch aufgerufen")
         val markerSize = 20
         val flagMarker = ImageView(requireContext())
         flagMarker.id = View.generateViewId()
