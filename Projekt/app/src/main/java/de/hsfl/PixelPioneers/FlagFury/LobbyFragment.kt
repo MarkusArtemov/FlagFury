@@ -45,7 +45,7 @@ class LobbyFragment : Fragment() {
         recyclerView.adapter = playerAdapter
 
         joinGameButton.setOnClickListener {
-            startGame()
+            mainViewModel.startGame()
         }
 
 
@@ -65,13 +65,13 @@ class LobbyFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val navController = findNavController()
 
-        mainViewModel.players.observe(viewLifecycleOwner){ players ->
-            Log.d("players",players.toString())
+        mainViewModel.players.observe(viewLifecycleOwner) { players ->
+            Log.d("players", players.toString())
             playerAdapter.updateList(players)
         }
 
-        mainViewModel.state.observe(viewLifecycleOwner){ state ->
-            if(state == "1" && navController.currentDestination?.id == R.id.lobbyFragment) {
+        mainViewModel.state.observe(viewLifecycleOwner) { state ->
+            if (state == "1" && navController.currentDestination?.id == R.id.lobbyFragment) {
                 (activity as MainActivity).startServerAndDiscovery()
                 navController.navigate(R.id.action_lobbyFragment_to_gameFragment)
             }
@@ -85,29 +85,12 @@ class LobbyFragment : Fragment() {
         super.onDestroyView()
     }
 
-    private fun startGame() {
-        mainViewModel.startGame(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { game,state ->
-                Log.d("Lobby","State changed in Game $game to $state")
-            },
-            { error ->
-                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
-            }
-        )
-    }
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
             mainViewModel.getPlayers()
             startPeriodicUpdate()
         }, updateInterval)
-    }
-
-    private fun showErrorToast(error : String) {
-        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
     }
 
     private fun stopPeriodicUpdate() {

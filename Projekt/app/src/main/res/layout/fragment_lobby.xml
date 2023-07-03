@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".LobbyFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -40,7 +39,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="202dp"
             android:text="Start Game"
-            android:textColor="#00FF00"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="@color/green"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
             app:layout_constraintHorizontal_bias="0.58"
@@ -55,7 +55,8 @@
             android:layout_marginTop="208dp"
             android:layout_marginEnd="56dp"
             android:text="Cancel"
-            android:textColor="#FF0000"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="@color/red"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/recyclerView"

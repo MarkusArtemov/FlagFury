@@ -21,8 +21,7 @@ class CreateFragment : Fragment() {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentCreateBinding.inflate(inflater, container, false)
         val navController = findNavController()
@@ -32,22 +31,17 @@ class CreateFragment : Fragment() {
         val name: EditText = binding.editTextName
 
         lobbyButton.setOnClickListener {
-            mainViewModel.registerGame(
-                name.text.toString(),
-                conquestPoints,
-                { gameId, token ->
-                    mainViewModel.setGameId(gameId)
-                    mainViewModel.setToken(token)
-                    mainViewModel.setName(name.text.toString())
-                    mainViewModel.setIsHost(true)
-                    if(navController.currentDestination?.id == R.id.createFragment){
-                        navController.navigate(R.id.action_createFragment_to_lobbyFragment)
-                    }
-                },
-                { error ->
-                    error?.let { showErrorToast(it) }
+            mainViewModel.registerGame(name.text.toString(), conquestPoints, { gameId, token ->
+                mainViewModel.setGameId(gameId)
+                mainViewModel.setToken(token)
+                mainViewModel.setName(name.text.toString())
+                mainViewModel.setIsHost(true)
+                if (navController.currentDestination?.id == R.id.createFragment) {
+                    navController.navigate(R.id.action_createFragment_to_lobbyFragment)
                 }
-            )
+            }, { error ->
+                error?.let { showErrorToast(it) }
+            })
         }
 
         cancelButton.setOnClickListener {
@@ -59,16 +53,17 @@ class CreateFragment : Fragment() {
                 mainViewModel.markerPosition.value
             )
         }
-        val gestureDetector = GestureDetector(context, object: GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent) {
-                Log.d("Create","Point created")
-                val touchX = e.x / binding.campusCard.width
-                val touchY = e.y / binding.campusCard.height
-                val mapCoordinate = Pair(touchX.toDouble(), touchY.toDouble())
-                Log.d("Create","$mapCoordinate")
-                addFlagMarker(mapCoordinate)
-            }
-        })
+        val gestureDetector =
+            GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+                override fun onLongPress(e: MotionEvent) {
+                    Log.d("Create", "Point created")
+                    val touchX = e.x / binding.campusCard.width
+                    val touchY = e.y / binding.campusCard.height
+                    val mapCoordinate = Pair(touchX.toDouble(), touchY.toDouble())
+                    Log.d("Create", "$mapCoordinate")
+                    addFlagMarker(mapCoordinate)
+                }
+            })
 
         binding.campusCard.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
@@ -111,8 +106,10 @@ class CreateFragment : Fragment() {
         val mapImageWidth = binding.campusCard.width
         val mapImageHeight = binding.campusCard.height
 
-        val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerViewWidth)
-        val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
+        val markerPosX =
+            LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerViewWidth)
+        val markerPosY =
+            LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerViewHeight)
 
         with(binding.target) {
             x = markerPosX.toFloat()
@@ -124,7 +121,7 @@ class CreateFragment : Fragment() {
         markerPosition: Pair<Double, Double>?
     ) {
         markerPosition?.let { position ->
-            val newPos = LocationUtils.reverseGeneratePosition(position.first,position.second)
+            val newPos = LocationUtils.reverseGeneratePosition(position.first, position.second)
             conquestPoints.add(newPos)
         }
         val markerSize = 20
@@ -135,16 +132,17 @@ class CreateFragment : Fragment() {
             val mapImageWidth = binding.campusCard.width
             val mapImageHeight = binding.campusCard.height
 
-            val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerSize)
-            val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerSize)
+            val markerPosX =
+                LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerSize)
+            val markerPosY =
+                LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerSize)
 
-            setViewConstraints(flagMarker, markerPosX.toDouble(), markerPosY.toDouble())
+            setViewConstraints(flagMarker, markerPosX, markerPosY)
         }
     }
 
 
-    private fun createFlagMarker( picture: Int): ImageView {
-        Log.d("j","wird eigentlich auch aufgerufen")
+    private fun createFlagMarker(picture: Int): ImageView {
         val markerSize = 20
         val flagMarker = ImageView(requireContext())
         flagMarker.id = View.generateViewId()
@@ -154,9 +152,7 @@ class CreateFragment : Fragment() {
     }
 
     private fun setViewConstraints(
-        flagMarker: ImageView,
-        markerPosX: Double,
-        markerPosY: Double
+        flagMarker: ImageView, markerPosX: Double, markerPosY: Double
     ) {
         ConstraintSet().apply {
             clone(binding.constraintLayout)

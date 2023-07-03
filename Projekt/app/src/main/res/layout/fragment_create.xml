@@ -59,6 +59,7 @@
             android:layout_marginTop="24dp"
             android:text="Set a Flag Position"
             app:layout_constraintEnd_toEndOf="parent"
+            android:backgroundTint="@color/black"
             app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editTextName" />
@@ -69,7 +70,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="56dp"
             android:text="Create Game"
-            android:textColor="#00FF00"
+            android:backgroundTint="@color/green"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonFlagPosition" />
@@ -80,7 +82,8 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="56dp"
             android:text="Cancel"
-            android:textColor="#FF0000"
+            android:backgroundTint="@color/red"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonFlagPosition" />

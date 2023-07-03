@@ -59,8 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                this, Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             isLocationPermissionGranted = true
@@ -71,9 +70,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_CODE) {
@@ -100,8 +97,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             LOCATION_PERMISSION_CODE -> {
                 if (ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                        this, Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     isLocationPermissionGranted = true
@@ -114,11 +110,13 @@ class MainActivity : AppCompatActivity() {
 
             BLUETOOTH_DISCOVERABLE_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(this, "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        this,
+                        "Bluetooth-Entdeckbarkeit wurde erfolgreich aktiviert",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     mainViewModel.startServer()
                     mainViewModel.startDiscoverDevices()
-//                    mainViewModel.setDiscoverEnabled(true)
                 } else {
                     Toast.makeText(
                         this,

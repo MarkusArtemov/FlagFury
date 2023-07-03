@@ -26,14 +26,11 @@ class GameFragment : Fragment() {
     private val handler = Handler(Looper.getMainLooper())
     private var currentPoints: List<Point> = emptyList()
     private var timerIsRunning = false
-    private var currentPoint: Point? = null
     private var isDefended = false
 
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentGameBinding.inflate(inflater, container, false)
         setupLeaveGameButton()
@@ -50,52 +47,60 @@ class GameFragment : Fragment() {
 
     private fun showExitConfirmation() {
         val snackBar = Snackbar.make(
-            requireView(),
-            "Möchtest du das Spiel wirklich verlassen?",
-            Snackbar.LENGTH_LONG
+            requireView(), "Möchtest du das Spiel wirklich verlassen?", Snackbar.LENGTH_LONG
         )
         snackBar.setAction("Ja") {
-            mainViewModel.removePlayer(
-                mainViewModel.gameId.value,
+            mainViewModel.removePlayer(mainViewModel.gameId.value,
                 mainViewModel.name.value,
                 mainViewModel.token.value,
                 { game, name ->
                     mainViewModel.stopServer()
                     mainViewModel.stopDiscoverDevices()
+                    timer.cancel()
+                    mainViewModel.currentPoint.value?.let { point ->
+                        if(point.team == -1){
+                            conquerPoint(point.id,"0")
+                        }
+                    }
+                    mainViewModel.setCurrentPoint(null)
                     findNavController().navigate(R.id.action_gameFragment_to_homeScreen)
                 },
                 { error ->
                     showErrorToast("Fehler bei der Abmeldung")
-                }
-            )
+                })
         }
         snackBar.show()
     }
 
 
-
-    private val timer = object: CountDownTimer(10_000, 1_000) {
+    private val timer = object : CountDownTimer(10_000, 1_000) {
         override fun onTick(millisUntilFinished: Long) {
-            if(LocationUtils.checkConquerPoint(currentPoint!!,mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)){
-                    connectToOpponents()
+            if (LocationUtils.checkConquerPoint(
+                    mainViewModel.currentPoint.value!!,
+                    mainViewModel.currentPosition.value!!,
+                    mainViewModel.team.value!!
+                )
+            ) {
+                connectToOpponents()
             }
-                if (
-                !LocationUtils.checkConquerPoint(currentPoint!!, mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)
-                || isDefended
-                ) {
-                conquerPoint(currentPoint?.id, "${mainViewModel.oldConquerPointTeam.value}")
+            if (!LocationUtils.checkConquerPoint(
+                    mainViewModel.currentPoint.value!!,
+                    mainViewModel.currentPosition.value!!,
+                    mainViewModel.team.value!!
+                ) || isDefended
+            ) {
+                conquerPoint(mainViewModel.currentPoint.value?.id, "${mainViewModel.oldConquerPointTeam.value}")
                 cancel()
                 timerIsRunning = false
             }
 
         }
 
-        override fun onFinish(){
+        override fun onFinish() {
             timerIsRunning = false
-            currentPoint?.let {
+            mainViewModel.currentPoint.value?.let {
                 conquerPoint(it.id, "${mainViewModel.team.value}")
-
-                currentPoint = null
+                mainViewModel.setCurrentPoint(null)
             }
         }
     }
@@ -107,16 +112,13 @@ class GameFragment : Fragment() {
         askForConquestPoints { points ->
             createAllFlags(points)
         }
-
         observeLiveData()
-
         startPeriodicUpdate()
     }
 
     private fun observeLiveData() {
         mainViewModel.isDefended.observe(viewLifecycleOwner) { defended ->
             isDefended = defended
-            Log.d("GameFragmet","is defended $isDefended")
         }
 
         mainViewModel.currentPosition.observe(viewLifecycleOwner) {
@@ -124,24 +126,29 @@ class GameFragment : Fragment() {
                 handlePositionUpdate(it)
             }
         }
+
     }
 
     private fun handlePositionUpdate(position: Pair<Double, Double>) {
         updateMarkerPosition(position)
 
-        for (point in currentPoints){
-            if (LocationUtils.checkConquerPoint(point, position, mainViewModel.team.value!!) && !timerIsRunning){
-                handleConquestPoint(point)
+        for (point in currentPoints) {
+            if (LocationUtils.checkConquerPoint(point, position, mainViewModel.team.value!!)) {
+                val isAlreadyConquered = mainViewModel.currentPoint.value?.id == point.id && point.team == mainViewModel.team.value
+                if (!timerIsRunning && !isAlreadyConquered && point.team != mainViewModel.team.value) {
+                    handleConquestPoint(point)
+                }
             }
         }
     }
+
 
     private fun handleConquestPoint(point: Point) {
         timer.start()
         timerIsRunning = true
         mainViewModel.setOldConquerPointTeamValue("${point.team}")
         conquerPoint(point.id, "-1")
-        currentPoint = point
+        mainViewModel.setCurrentPoint(point)
     }
 
 
@@ -156,14 +163,12 @@ class GameFragment : Fragment() {
 
     private fun askForConquestPoints(callback: (points: List<Point>) -> Unit) {
         mainViewModel.getPoints { points, state ->
-                handleConquestPoints(points,state,callback)
+            handleConquestPoints(points, state, callback)
         }
     }
 
     private fun handleConquestPoints(
-        points: List<Point>?,
-        state: String?,
-        callback: (points: List<Point>) -> Unit
+        points: List<Point>?, state: String?, callback: (points: List<Point>) -> Unit
     ) {
         if (state == "2") {
             handleGameOver(points)
@@ -177,7 +182,7 @@ class GameFragment : Fragment() {
     private fun handleGameOver(points: List<Point>?) {
         points?.let {
             val navController = findNavController()
-            if(navController.currentDestination?.id == R.id.gameFragment) {
+            if (navController.currentDestination?.id == R.id.gameFragment) {
                 if (checkAllPointsSameTeam(points, 1)) {
                     navigateToWinFragment(R.id.action_gameFragment_to_winRedFragment)
                 } else if (checkAllPointsSameTeam(points, 2)) {
@@ -190,9 +195,9 @@ class GameFragment : Fragment() {
     private fun handleConquestResult(points: List<Point>?) {
         points?.let {
             if (checkAllPointsSameTeam(points, 1)) {
-                endGame()
+                mainViewModel.endGame()
             } else if (checkAllPointsSameTeam(points, 2)) {
-                endGame()
+                mainViewModel.endGame()
             }
         }
     }
@@ -206,21 +211,6 @@ class GameFragment : Fragment() {
         return filteredPoints.size == points.size
     }
 
-
-
-    private fun endGame() {
-        mainViewModel.endGame(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { game,state ->
-                Log.d("Lobby","State changed in Game $game to $state")
-            },
-            { _ ->
-                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
-            }
-        )
-    }
 
 
     private fun startPeriodicUpdate() {
@@ -263,8 +253,8 @@ class GameFragment : Fragment() {
         val devicesMap = mainViewModel.discoveredDevices.value
         val team = if (mainViewModel.team.value == 1) "blau" else "rot"
         if (devicesMap != null) {
-            for(device in devicesMap.values){
-                mainViewModel.connectToServer(device,team)
+            for (device in devicesMap.values) {
+                mainViewModel.connectToServer(device, team)
             }
         }
     }
@@ -279,14 +269,14 @@ class GameFragment : Fragment() {
     }
 
 
-    private fun conquerPoint(id : String?, team: String){
+    private fun conquerPoint(id: String?, team: String) {
         val game = mainViewModel.gameId.value
         val name = mainViewModel.name.value
         val token = mainViewModel.token.value
-        mainViewModel.conquerPoint(game,id,team,name,token,{ response->
-            Log.d("GameFragment","Das bekommen: $response")
+        mainViewModel.conquerPoint(game, id, team, name, token, { response ->
+            Log.d("GameFragment", "Das bekommen: $response")
 
-        },{error->
+        }, { error ->
             error?.let { showErrorToast(it) }
 
         })
@@ -300,8 +290,10 @@ class GameFragment : Fragment() {
         val mapImageWidth = binding.campusCard.width
         val mapImageHeight = binding.campusCard.height
 
-        val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerViewWidth)
-        val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
+        val markerPosX =
+            LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerViewWidth)
+        val markerPosY =
+            LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerViewHeight)
 
         with(binding.target) {
             x = markerPosX.toFloat()
@@ -328,7 +320,7 @@ class GameFragment : Fragment() {
             val markerPosX = LocationUtils.calculateMarkerPosX(position, mapImageWidth, markerSize)
             val markerPosY = LocationUtils.calculateMarkerPosY(position, mapImageHeight, markerSize)
 
-            setViewConstraints(flagMarker, markerPosX.toDouble(), markerPosY.toDouble())
+            setViewConstraints(flagMarker, markerPosX, markerPosY)
         }
     }
 
@@ -352,9 +344,7 @@ class GameFragment : Fragment() {
     }
 
     private fun setViewConstraints(
-        flagMarker: ImageView,
-        markerPosX: Double,
-        markerPosY: Double
+        flagMarker: ImageView, markerPosX: Double, markerPosY: Double
     ) {
 
         ConstraintSet().apply {

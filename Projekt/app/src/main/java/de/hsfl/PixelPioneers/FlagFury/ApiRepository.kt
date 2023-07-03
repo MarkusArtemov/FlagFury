@@ -132,7 +132,7 @@ class ApiRepository private constructor(private val application: Application) {
         Volley.newRequestQueue(application).add(request)
     }
 
-    fun startGame(game: String?, name: String?, token: String?, callback: (game : String?, state : String?) -> Unit,errorCallback: (error: String?) -> Unit) {
+    fun startGame(game: String?, name: String?, token: String?,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/start"
 
         val jsonRequest = JSONObject().apply {
@@ -144,19 +144,16 @@ class ApiRepository private constructor(private val application: Application) {
         }
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val state = response.getString("state")
-                val gameId = response.getString("game")
-                callback(gameId, state)
             },
             { error ->
-                errorCallback("Es ist zu einem Fehler gekommen")
+                errorCallback("Fehler beim Starten des Spiels")
             })
 
         Volley.newRequestQueue(application).add(request)
     }
 
 
-    fun endGame(game: String?, name: String?, token: String?, callback: (game : String?, state : String?) -> Unit,errorCallback: (error: String?) -> Unit) {
+    fun endGame(game: String?, name: String?, token: String?,errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/end"
 
         val jsonRequest = JSONObject().apply {
@@ -168,12 +165,9 @@ class ApiRepository private constructor(private val application: Application) {
         }
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
-                val state = response.getString("state")
-                val gameId = response.getString("game")
-                callback(gameId, state)
             },
             { error ->
-                errorCallback("Es ist zu einem Fehler gekommen")
+                errorCallback("Es ist zu einem Fehler beim Beenden des Spiels gekommen")
             })
 
         Volley.newRequestQueue(application).add(request)

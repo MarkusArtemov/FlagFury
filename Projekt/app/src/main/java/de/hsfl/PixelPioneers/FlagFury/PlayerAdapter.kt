@@ -7,7 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import de.hsfl.PixelPioneers.FlagFury.databinding.ListRowBinding
 import org.json.JSONObject
 
-class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Adapter<PlayerAdapter.ViewHolder>() {
+class PlayerAdapter(private var playerList: List<JSONObject>) :
+    RecyclerView.Adapter<PlayerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ListRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -25,12 +26,13 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateList(playerList: List<JSONObject>) {
-       this.playerList = playerList
+        this.playerList = playerList
         notifyDataSetChanged()
     }
 
 
-    inner class ViewHolder(private val binding: ListRowBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ListRowBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(player: JSONObject) {
             val name = player.getString("name")
@@ -39,8 +41,8 @@ class PlayerAdapter(private var playerList: List<JSONObject>) : RecyclerView.Ada
 
             binding.name.text = name
             binding.team.text = if (team == 1) "Rot" else "Blau"
-           if (!bluetoothStatus.isNullOrEmpty()) {
-               binding.bluetoothStatus.setImageResource(android.R.drawable.btn_star_big_on)
+            if (!bluetoothStatus.isNullOrEmpty()) {
+                binding.bluetoothStatus.setImageResource(android.R.drawable.btn_star_big_on)
             }
 
 
