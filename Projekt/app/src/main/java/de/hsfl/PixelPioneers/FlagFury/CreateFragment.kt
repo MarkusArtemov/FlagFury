@@ -143,7 +143,7 @@ class CreateFragment : Fragment() {
     private fun setupTouchDelegate(flagMarker: ImageView) {
         flagMarker.post {
             val parent = flagMarker.parent as View
-            val touchPaddingDp = 24
+            val touchPaddingDp = 50
             val touchPaddingPx = (touchPaddingDp * resources.displayMetrics.density).toInt()
 
             val bounds = Rect()
@@ -184,8 +184,6 @@ class CreateFragment : Fragment() {
             LocationUtils.calculateMarkerPosY(position, mapImageHeight, markerSize)
         setViewConstraints(flagMarker, markerPosX, markerPosY)
     }
-
-
 
 
     private fun createFlagMarker(picture: Int): ImageView {

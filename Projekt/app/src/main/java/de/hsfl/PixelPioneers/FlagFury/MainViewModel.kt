@@ -28,7 +28,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         get() = _currentPoint
 
     fun setCurrentPoint(point: Point?) {
-
         _currentPoint.value = point
     }
 
@@ -193,6 +192,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return list
     }
 
+    fun cancelAllRequests(){
+        apiRepository.cancelAllRequests()
+    }
 
     fun registerGame(
         name: String,

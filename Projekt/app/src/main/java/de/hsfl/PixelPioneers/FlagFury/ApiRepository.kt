@@ -10,6 +10,10 @@ import org.json.JSONObject
 
 class ApiRepository private constructor(private val application: Application) {
 
+    private val requestQueue by lazy {
+        Volley.newRequestQueue(application.applicationContext)
+    }
+
     companion object {
         private var instance: ApiRepository? = null
 
@@ -19,6 +23,10 @@ class ApiRepository private constructor(private val application: Application) {
             }
             return instance!!
         }
+    }
+
+    fun cancelAllRequests() {
+        requestQueue.cancelAll { true }
     }
 
     fun registerGame(name: String, points: List<Pair<Double, Double>>, callback: (gameId: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
@@ -49,7 +57,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Es ist zu einem Fehler gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
 
@@ -78,7 +86,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Es ist zu einem Fehler gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
 
 
     }
@@ -106,7 +114,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Es ist zu einem Fehler gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
 
@@ -130,7 +138,7 @@ class ApiRepository private constructor(private val application: Application) {
                     errorCallback("Es ist zu einem Fehler gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
     fun startGame(game: String?, name: String?, token: String?,errorCallback: (error: String?) -> Unit) {
@@ -150,7 +158,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Fehler beim Starten des Spiels")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
 
@@ -171,7 +179,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Es ist zu einem Fehler beim Beenden des Spiels gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
 
@@ -196,7 +204,7 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Es ist zu einem Fehler gekommen")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
 
 
@@ -234,8 +242,9 @@ class ApiRepository private constructor(private val application: Application) {
                 errorCallback("Fehler beim Abrufen der Eroberungspunkte")
             })
 
-        Volley.newRequestQueue(application).add(request)
+        requestQueue.add(request)
     }
+
 
 
 

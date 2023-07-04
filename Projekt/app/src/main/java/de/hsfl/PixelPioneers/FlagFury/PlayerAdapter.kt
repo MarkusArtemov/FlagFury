@@ -1,5 +1,6 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ class PlayerAdapter(private var playerList: List<JSONObject>, private val clickL
         return playerList.size
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun submitList(players: List<JSONObject>) {
         playerList = players
         notifyDataSetChanged()
