@@ -84,13 +84,13 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun joinGame(game: String, name: String, callback: (team: Int, token : String) -> Unit,errorCallback: (error: String?) -> Unit) {
+    fun joinGame(game: String, name: String, team: Int, callback: (team: Int, token : String) -> Unit, errorCallback: (error: String?) -> Unit) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
             put("game", game)
             put("name", name)
-            put("team", 0)
+            put("team", team)
         }
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
@@ -108,6 +108,7 @@ class ApiRepository private constructor(private val application: Application) {
 
         Volley.newRequestQueue(application).add(request)
     }
+
 
 
     fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit,errorCallback: (error: String?) -> Unit) {

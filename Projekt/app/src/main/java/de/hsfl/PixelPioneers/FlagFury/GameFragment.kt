@@ -54,14 +54,16 @@ class GameFragment : Fragment() {
                 mainViewModel.name.value,
                 mainViewModel.token.value,
                 { game, name ->
-                    mainViewModel.stopServer()
-                    mainViewModel.stopDiscoverDevices()
-                    timer.cancel()
+                    mainViewModel.setState("0")
                     mainViewModel.currentPoint.value?.let { point ->
                         if(point.team == -1){
                             conquerPoint(point.id,"0")
                         }
                     }
+                    stopPeriodicUpdate()
+                    mainViewModel.stopServer()
+                    mainViewModel.stopDiscoverDevices()
+                    timer.cancel()
                     mainViewModel.setCurrentPoint(null)
                     findNavController().navigate(R.id.action_gameFragment_to_homeScreen)
                 },
@@ -215,7 +217,9 @@ class GameFragment : Fragment() {
 
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            mainViewModel.getPlayers()
+            mainViewModel.getPlayers { error ->
+                error?.let { showErrorToast(it) }
+            }
             askForConquestPoints { points ->
                 currentPoints = points
                 updateFlagStatus(points)

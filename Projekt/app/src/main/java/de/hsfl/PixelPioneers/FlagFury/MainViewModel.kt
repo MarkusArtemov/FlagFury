@@ -23,11 +23,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _discoveredDevices.postValue(updatedMap)
         }
     }
-    private val _currentPoint: MutableLiveData<Point> = MutableLiveData()
-    val currentPoint: LiveData<Point>
+    private val _currentPoint: MutableLiveData<Point?> = MutableLiveData()
+    val currentPoint: MutableLiveData<Point?>
         get() = _currentPoint
 
     fun setCurrentPoint(point: Point?) {
+
         _currentPoint.value = point
     }
 
@@ -35,6 +36,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableLiveData<String>()
     val state: LiveData<String>
         get() = _state
+
+    fun setState(state: String) {
+        _state.value = state
+    }
 
     private val _isDefended = MutableLiveData(false)
     val isDefended: LiveData<Boolean>
@@ -207,17 +212,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun joinGame(
         gameId: String,
         name: String,
+        team : Int,
         callback: (team: Int, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
         apiRepository.joinGame(
-            gameId, name, { team, token ->
+            gameId, name, team, { team1, token ->
                 callback(team, token)
             }, errorCallback
         )
     }
 
-    fun getPlayers() {
+    fun getPlayers(errorCallback: (error: String?) -> Unit) {
         apiRepository.getPlayers(gameId.value, name.value, token.value, { players ->
             players?.let {
                 val playerJSONArray = it.getJSONArray("players")
@@ -231,6 +237,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     val currentPlayerName = player.getString("name")
                     val currentPlayerTeam = player.getInt("team")
 
+                    if (player.has("token")) {
+                        val currentPlayerToken = player.getString("token")
+                        Log.d("MainViewModel", "Player token: $currentPlayerToken")
+                    }
+
                     if (currentPlayerName == playerName) {
                         playerTeam = currentPlayerTeam
                         setTeam(playerTeam)
@@ -239,9 +250,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _players.value = playersList
             }
-        }, { error ->
-            error?.let { showErrorToast(it) }
-        })
+        }, errorCallback)
     }
 
 

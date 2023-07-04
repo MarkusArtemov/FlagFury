@@ -39,15 +39,17 @@ class JoinFragment : Fragment() {
             builder.setTitle("Team auswählen")
             builder.setItems(teams) { dialog, which ->
                 val team = when (which) {
-                    0 -> 0 // "Egal"
-                    1 -> 1 // "Rot"
-                    2 -> 2 // "Blau"
+                    0 -> 0
+                    1 -> 1
+                    2 -> 2
                     else -> 0
                 }
                 mainViewModel.joinGame(
                     gameId.text.toString(),
                     nameInput.text.toString(),
+                    team,
                     { team1, token ->
+                        Log.d("Join","das ist mein team $team")
                         mainViewModel.setTeam(team1)
                         mainViewModel.setToken(token)
                         mainViewModel.setGameId(gameId.text.toString())

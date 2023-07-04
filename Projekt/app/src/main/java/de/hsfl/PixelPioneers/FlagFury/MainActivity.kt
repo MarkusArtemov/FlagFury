@@ -12,15 +12,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.Observer
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.lokibt.bluetooth.BluetoothAdapter
-import com.lokibt.bluetooth.BluetoothDevice
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -31,22 +28,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var client: FusedLocationProviderClient
     private val mainViewModel: MainViewModel by viewModels()
-
-    private val callback = object : LocationCallback() {
-        override fun onLocationResult(p0: LocationResult) {
-            super.onLocationResult(p0)
-            for (location in p0.locations) {
-                val currentPosition = Pair(location.longitude, location.latitude)
-                mainViewModel.setCurrentPosition(currentPosition)
-                Log.d("Meine Position", "$currentPosition")
-            }
-        }
-    }
-
-    private val request = LocationRequest.create().apply {
-        interval = 1000
-        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-    }
 
     private var isLocationPermissionGranted = false
 
@@ -63,9 +44,29 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             isLocationPermissionGranted = true
-            client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            client.requestLocationUpdates(getLocationRequest(), getLocationCallback(), Looper.getMainLooper())
         } else {
             ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_CODE)
+        }
+    }
+
+    private fun getLocationRequest(): LocationRequest {
+        return LocationRequest.create().apply {
+            interval = 1000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+    }
+
+    private fun getLocationCallback(): LocationCallback {
+        return object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                super.onLocationResult(p0)
+                for (location in p0.locations) {
+                    val currentPosition = Pair(location.longitude, location.latitude)
+                    mainViewModel.setCurrentPosition(currentPosition)
+                    Log.d("Meine Position", "$currentPosition")
+                }
+            }
         }
     }
 
@@ -91,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, LOCATION_PERMISSION_CODE)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -132,7 +134,6 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "GPS ist zum Spielen erforderlich", Toast.LENGTH_SHORT).show()
     }
 
-
     fun startServerAndDiscovery() {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter.state != BluetoothAdapter.STATE_ON) {
@@ -145,5 +146,4 @@ class MainActivity : AppCompatActivity() {
             mainViewModel.startDiscoverDevices()
         }
     }
-
 }

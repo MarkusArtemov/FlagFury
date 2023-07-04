@@ -15,7 +15,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentLobbyBinding
-import org.json.JSONArray
 import org.json.JSONObject
 
 class LobbyFragment : Fragment() {
@@ -28,7 +27,7 @@ class LobbyFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val binding = FragmentLobbyBinding.inflate(inflater, container, false)
         val navController = findNavController()
         val joinGameButton: Button = binding.buttonStart
@@ -38,7 +37,25 @@ class LobbyFragment : Fragment() {
             append(mainViewModel.gameId.value)
         }
 
-        playerAdapter = PlayerAdapter(emptyList())
+        val isHost = mainViewModel.isHost.value ?: false
+        playerAdapter = PlayerAdapter(emptyList(), object : OnPlayerClickListener {
+            override fun onPlayerClick(player: JSONObject) {
+                val name = player.getString("name")
+                val gameId = mainViewModel.gameId.value
+                val token = player.getString("token")
+                mainViewModel.removePlayer(gameId,name,token,{
+                        game, name ->
+                    Log.d("Lobby","$name wurde erfolgreich gekickt")
+                },{
+                        error ->
+                    error?.let { showErrorToast(it) }
+                })
+            }
+        }, isHost, mainViewModel.name.value!!)
+
+
+
+
 
         val recyclerView: RecyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -50,9 +67,22 @@ class LobbyFragment : Fragment() {
 
 
         cancelButton.setOnClickListener {
-            mainViewModel.setIsHost(false)
+                mainViewModel.removePlayer(
+                mainViewModel.gameId.value,
+                mainViewModel.name.value,
+                mainViewModel.token.value,
+                { game, name ->
+                    stopPeriodicUpdate()
+                    if(navController.currentDestination?.id == R.id.lobbyFragment){
+                        findNavController().navigate(R.id.action_gameFragment_to_homeScreen)
+                    }
+                },
+                { error ->
+                    showErrorToast("Fehler bei der Abmeldung")
+                })
             navController.navigate(R.id.action_lobbyFragment_to_homeScreen)
         }
+
 
         mainViewModel.isHost.observe(viewLifecycleOwner) { isHost ->
             binding.buttonStart.visibility = if (isHost) View.VISIBLE else View.GONE
@@ -66,8 +96,9 @@ class LobbyFragment : Fragment() {
         val navController = findNavController()
 
         mainViewModel.players.observe(viewLifecycleOwner) { players ->
-            Log.d("players", players.toString())
-            playerAdapter.updateList(players)
+            val sortedPlayers = players.sortedWith(compareBy<JSONObject>
+            { it.getString("name") == mainViewModel.name.value }.reversed())
+            playerAdapter.submitList(sortedPlayers)
         }
 
         mainViewModel.state.observe(viewLifecycleOwner) { state ->
@@ -86,9 +117,20 @@ class LobbyFragment : Fragment() {
     }
 
 
+    private fun showErrorToast(error: String) {
+        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+    }
+
+
     private fun startPeriodicUpdate() {
         handler.postDelayed({
-            mainViewModel.getPlayers()
+            mainViewModel.getPlayers { error ->
+                    showErrorToast("Du wurdest aus der Lobby gekickt")
+                    val navController = findNavController()
+                    stopPeriodicUpdate()
+                   if( navController.currentDestination?.id == R.id.lobbyFragment)
+                    navController.navigate(R.id.action_lobbyFragment_to_homeScreen)
+            }
             startPeriodicUpdate()
         }, updateInterval)
     }
