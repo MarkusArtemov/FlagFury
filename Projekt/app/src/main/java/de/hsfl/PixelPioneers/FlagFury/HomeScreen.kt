@@ -5,20 +5,16 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.Button
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import de.hsfl.PixelPioneers.FlagFury.MainViewModel
-import de.hsfl.PixelPioneers.FlagFury.R
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentHomeScreenBinding
 
 class HomeScreen : Fragment() {
-    private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var binding: FragmentHomeScreenBinding
 
     override fun onCreateView(

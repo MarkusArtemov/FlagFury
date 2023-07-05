@@ -29,7 +29,12 @@ class ApiRepository private constructor(private val application: Application) {
         requestQueue.cancelAll { true }
     }
 
-    fun registerGame(name: String, points: List<Pair<Double, Double>>, callback: (gameId: String, token: String) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun registerGame(
+        name: String,
+        points: List<Pair<Double, Double>>,
+        callback: (gameId: String, token: String) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/game/register"
 
         val jsonArray = JSONArray()
@@ -61,10 +66,10 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-
-    fun conquerPoint(game: String?, pointId: String?,team: String?,name: String?,token: String?,
-                     callback: (obj : JSONObject?) -> Unit
-                     ,errorCallback: (error: String?) -> Unit) {
+    fun conquerPoint(
+        game: String?, pointId: String?, team: String?, name: String?, token: String?,
+        callback: (obj: JSONObject?) -> Unit, errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/point/conquer"
 
         val jsonRequest = JSONObject().apply {
@@ -76,7 +81,7 @@ class ApiRepository private constructor(private val application: Application) {
                 put("token", token)
             })
         }
-        Log.d("Das hingesendet","$jsonRequest")
+        Log.d("Das hingesendet", "$jsonRequest")
 
         val request = JsonObjectRequest(Request.Method.POST, url, jsonRequest,
             { response ->
@@ -92,7 +97,13 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun joinGame(game: String, name: String, team: Int, callback: (team: Int, token : String) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun joinGame(
+        game: String,
+        name: String,
+        team: Int,
+        callback: (team: Int, token: String) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/game/join"
 
         val jsonRequest = JSONObject().apply {
@@ -108,7 +119,7 @@ class ApiRepository private constructor(private val application: Application) {
                 val team = response.getInt("team")
                 val token = response.getString("token")
                 Log.d("ApiRepository", "Game ID: $game, Name: $name, Team: $team, Token: $token")
-                callback(team , token)
+                callback(team, token)
             },
             { error ->
                 errorCallback("Es ist zu einem Fehler gekommen")
@@ -118,8 +129,13 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-
-    fun getPlayers(game: String?, name: String?, token: String?, callback: (players: JSONObject?) -> Unit,errorCallback: (error: String?) -> Unit) {
+    fun getPlayers(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (players: JSONObject?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/players"
 
         val jsonRequest = JSONObject().apply {
@@ -135,13 +151,18 @@ class ApiRepository private constructor(private val application: Application) {
                 callback(response)
             },
             { error ->
-                    errorCallback("Es ist zu einem Fehler gekommen")
+                errorCallback("Es ist zu einem Fehler gekommen")
             })
 
         requestQueue.add(request)
     }
 
-    fun startGame(game: String?, name: String?, token: String?,errorCallback: (error: String?) -> Unit) {
+    fun startGame(
+        game: String?,
+        name: String?,
+        token: String?,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/game/start"
 
         val jsonRequest = JSONObject().apply {
@@ -162,7 +183,12 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun endGame(game: String?, name: String?, token: String?,errorCallback: (error: String?) -> Unit) {
+    fun endGame(
+        game: String?,
+        name: String?,
+        token: String?,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/game/end"
 
         val jsonRequest = JSONObject().apply {
@@ -183,7 +209,13 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun removePlayer(game: String?, name: String?, token: String?, callback: (game : String?, name : String?) -> Unit, errorCallback: (error: String?) -> Unit){
+    fun removePlayer(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (game: String?, name: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
 
         val url = "https://ctf.letorbi.de/player/remove"
 
@@ -208,7 +240,13 @@ class ApiRepository private constructor(private val application: Application) {
     }
 
 
-    fun getPoints(game: String?, name: String?, token: String?, callback: (points: List<Point>?, state : String?, game : String?) -> Unit, errorCallback: (error: String?) -> Unit) {
+    fun getPoints(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (points: List<Point>?, state: String?, game: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
         val url = "https://ctf.letorbi.de/points"
 
         val jsonRequest = JSONObject().apply {
@@ -236,7 +274,7 @@ class ApiRepository private constructor(private val application: Application) {
                     val point = Point(id, team, lat, long)
                     points.add(point)
                 }
-                callback(points,state, game)
+                callback(points, state, game)
             },
             { error ->
                 errorCallback("Fehler beim Abrufen der Eroberungspunkte")
@@ -244,8 +282,6 @@ class ApiRepository private constructor(private val application: Application) {
 
         requestQueue.add(request)
     }
-
-
 
 
 }

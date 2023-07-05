@@ -1,13 +1,12 @@
 package de.hsfl.PixelPioneers.FlagFury
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentWinBlueBinding
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentWinRedBinding
 
 class WinRedFragment : Fragment() {
@@ -18,7 +17,7 @@ class WinRedFragment : Fragment() {
     ): View? {
         val binding = FragmentWinRedBinding.inflate(inflater, container, false)
         val navController = findNavController()
-        val closeButton =  binding.closeButton
+        val closeButton = binding.closeButton
 
         closeButton.setOnClickListener {
             mainViewModel.setIsHost(false)

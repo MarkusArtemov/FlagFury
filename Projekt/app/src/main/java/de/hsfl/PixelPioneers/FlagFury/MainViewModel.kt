@@ -23,22 +23,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _discoveredDevices.postValue(updatedMap)
         }
     }
-    private val _currentPoint: MutableLiveData<Point?> = MutableLiveData()
-    val currentPoint: MutableLiveData<Point?>
-        get() = _currentPoint
-
-    fun setCurrentPoint(point: Point?) {
-        _currentPoint.value = point
-    }
 
 
     private val _state = MutableLiveData<String>()
     val state: LiveData<String>
         get() = _state
-
-    fun setState(state: String) {
-        _state.value = state
-    }
 
     private val _isDefended = MutableLiveData(false)
     val isDefended: LiveData<Boolean>
@@ -192,7 +181,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return list
     }
 
-    fun cancelAllRequests(){
+    fun cancelAllRequests() {
         apiRepository.cancelAllRequests()
     }
 
@@ -214,7 +203,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun joinGame(
         gameId: String,
         name: String,
-        team : Int,
+        team: Int,
         callback: (team: Int, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
@@ -282,34 +271,34 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-        fun conquerPoint(
-            game: String?,
-            point: String?,
-            team: String?,
-            name: String?,
-            token: String?,
-            callback: (obj: JSONObject?) -> Unit,
-            errorCallback: (error: String?) -> Unit
-        ) {
-            apiRepository.conquerPoint(
-                gameId.value, point, team, name, token, { response ->
-                    callback(response)
-                }, errorCallback
-            )
-        }
+    fun conquerPoint(
+        game: String?,
+        point: String?,
+        team: String?,
+        name: String?,
+        token: String?,
+        callback: (obj: JSONObject?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.conquerPoint(
+            gameId.value, point, team, name, token, { response ->
+                callback(response)
+            }, errorCallback
+        )
+    }
 
-        fun removePlayer(
-            game: String?,
-            name: String?,
-            token: String?,
-            callback: (game: String, name: String?) -> Unit,
-            errorCallback: (error: String?) -> Unit
-        ) {
-            apiRepository.removePlayer(
-                game, name, token, { gameId, playerName ->
-                    gameId?.let { callback(it, playerName) }
-                }, errorCallback
-            )
-        }
+    fun removePlayer(
+        game: String?,
+        name: String?,
+        token: String?,
+        callback: (game: String, name: String?) -> Unit,
+        errorCallback: (error: String?) -> Unit
+    ) {
+        apiRepository.removePlayer(
+            game, name, token, { gameId, playerName ->
+                gameId?.let { callback(it, playerName) }
+            }, errorCallback
+        )
+    }
 
 }

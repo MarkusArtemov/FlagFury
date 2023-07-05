@@ -11,11 +11,11 @@
         android:layout_height="wrap_content"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/team"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_weight="1"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:text="Name" />
 
     <TextView
@@ -24,10 +24,10 @@
         android:layout_height="wrap_content"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/name"
         app:layout_constraintEnd_toStartOf="@+id/bluetoothStatus"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toEndOf="@+id/name"
+        app:layout_constraintTop_toTopOf="parent"
         tools:text="Team" />
 
     <ImageView
@@ -35,10 +35,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/team"
         app:layout_constraintEnd_toStartOf="@+id/guideLine"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toEndOf="@+id/team"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@android:drawable/btn_star_big_off" />
 
     <androidx.constraintlayout.widget.Guideline
@@ -55,8 +55,8 @@
         android:backgroundTint="@color/red"
         android:text="Kick"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guideLine"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideLine"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

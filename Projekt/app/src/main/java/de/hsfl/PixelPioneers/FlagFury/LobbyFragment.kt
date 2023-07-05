@@ -43,18 +43,13 @@ class LobbyFragment : Fragment() {
                 val name = player.getString("name")
                 val gameId = mainViewModel.gameId.value
                 val token = player.getString("token")
-                mainViewModel.removePlayer(gameId,name,token,{
-                        game, name ->
-                    Log.d("Lobby","$name wurde erfolgreich gekickt")
-                },{
-                        error ->
+                mainViewModel.removePlayer(gameId, name, token, { game, name ->
+                    Log.d("Lobby", "$name wurde erfolgreich gekickt")
+                }, { error ->
                     error?.let { showErrorToast(it) }
                 })
             }
         }, isHost, mainViewModel.name.value!!)
-
-
-
 
 
         val recyclerView: RecyclerView = binding.recyclerView
@@ -67,13 +62,13 @@ class LobbyFragment : Fragment() {
 
 
         cancelButton.setOnClickListener {
-                mainViewModel.removePlayer(
+            mainViewModel.removePlayer(
                 mainViewModel.gameId.value,
                 mainViewModel.name.value,
                 mainViewModel.token.value,
                 { game, name ->
                     stopPeriodicUpdate()
-                    if(navController.currentDestination?.id == R.id.lobbyFragment){
+                    if (navController.currentDestination?.id == R.id.lobbyFragment) {
                         findNavController().navigate(R.id.action_gameFragment_to_homeScreen)
                     }
                 },
@@ -97,7 +92,8 @@ class LobbyFragment : Fragment() {
 
         mainViewModel.players.observe(viewLifecycleOwner) { players ->
             val sortedPlayers = players.sortedWith(compareBy<JSONObject>
-            { it.getString("name") == mainViewModel.name.value }.reversed())
+            { it.getString("name") == mainViewModel.name.value }.reversed()
+            )
             playerAdapter.submitList(sortedPlayers)
         }
 
@@ -125,10 +121,10 @@ class LobbyFragment : Fragment() {
     private fun startPeriodicUpdate() {
         handler.postDelayed({
             mainViewModel.getPlayers { error ->
-                    showErrorToast("Du wurdest aus der Lobby gekickt")
-                    val navController = findNavController()
-                    stopPeriodicUpdate()
-                   if( navController.currentDestination?.id == R.id.lobbyFragment)
+                showErrorToast("Du wurdest aus der Lobby gekickt")
+                val navController = findNavController()
+                stopPeriodicUpdate()
+                if (navController.currentDestination?.id == R.id.lobbyFragment)
                     navController.navigate(R.id.action_lobbyFragment_to_homeScreen)
             }
             startPeriodicUpdate()

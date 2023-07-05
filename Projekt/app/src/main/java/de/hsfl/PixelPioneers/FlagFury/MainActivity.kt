@@ -12,11 +12,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.lokibt.bluetooth.BluetoothAdapter
 
 class MainActivity : AppCompatActivity() {
@@ -44,7 +40,11 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             isLocationPermissionGranted = true
-            client.requestLocationUpdates(getLocationRequest(), getLocationCallback(), Looper.getMainLooper())
+            client.requestLocationUpdates(
+                getLocationRequest(),
+                getLocationCallback(),
+                Looper.getMainLooper()
+            )
         } else {
             ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_CODE)
         }

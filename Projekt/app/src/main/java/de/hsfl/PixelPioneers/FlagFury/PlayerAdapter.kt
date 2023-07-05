@@ -8,7 +8,12 @@ import androidx.recyclerview.widget.RecyclerView
 import de.hsfl.PixelPioneers.FlagFury.databinding.ListRowBinding
 import org.json.JSONObject
 
-class PlayerAdapter(private var playerList: List<JSONObject>, private val clickListener: OnPlayerClickListener, private val isHost: Boolean, private val hostName: String) :
+class PlayerAdapter(
+    private var playerList: List<JSONObject>,
+    private val clickListener: OnPlayerClickListener,
+    private val isHost: Boolean,
+    private val hostName: String
+) :
     RecyclerView.Adapter<PlayerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -31,7 +36,11 @@ class PlayerAdapter(private var playerList: List<JSONObject>, private val clickL
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder(private val binding: ListRowBinding, private val isHost: Boolean, private val hostName: String) :
+    inner class ViewHolder(
+        private val binding: ListRowBinding,
+        private val isHost: Boolean,
+        private val hostName: String
+    ) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(player: JSONObject, clickListener: OnPlayerClickListener) {

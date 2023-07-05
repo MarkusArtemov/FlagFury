@@ -23,7 +23,11 @@ class LocationUtils {
             return Pair(longitude, latitude)
         }
 
-        fun checkConquerPoint(conquerPoint: Point, currentPosition: Pair<Double, Double>, team :Int): Boolean {
+        fun checkConquerPoint(
+            conquerPoint: Point,
+            currentPosition: Pair<Double, Double>,
+            team: Int
+        ): Boolean {
             val playerLocation = Location("Player")
             playerLocation.latitude = currentPosition.second
             playerLocation.longitude = currentPosition.first
@@ -36,11 +40,19 @@ class LocationUtils {
             return distance < 5 && conquerPoint.team != team
         }
 
-        fun calculateMarkerPosX(markerPosition: Pair<Double, Double>, mapImageWidth: Int, markerViewWidth: Int): Double {
+        fun calculateMarkerPosX(
+            markerPosition: Pair<Double, Double>,
+            mapImageWidth: Int,
+            markerViewWidth: Int
+        ): Double {
             return (markerPosition.first * mapImageWidth - markerViewWidth / 2)
         }
 
-        fun calculateMarkerPosY(markerPosition: Pair<Double, Double>, mapImageHeight: Int, markerViewHeight: Int): Double {
+        fun calculateMarkerPosY(
+            markerPosition: Pair<Double, Double>,
+            mapImageHeight: Int,
+            markerViewHeight: Int
+        ): Double {
             return (markerPosition.second * mapImageHeight - markerViewHeight / 2)
         }
 
