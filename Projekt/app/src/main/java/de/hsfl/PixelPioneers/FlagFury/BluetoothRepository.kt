@@ -87,10 +87,13 @@ class BluetoothRepository {
     ) {
         val serverThread = Thread {
             try {
-                Log.d("BluetoothRepo","Server erfolgreich gestartet mit $team")
+                Log.d("BluetoothRepo", "Server erfolgreich gestartet mit $team")
                 isServerActive = true
                 val serverUuid = generateUUIDFromTeamName(team)
-                val serverSocket = _bluetoothAdapter.listenUsingRfcommWithServiceRecord("FlagFuryServer_$team", serverUuid)
+                val serverSocket = _bluetoothAdapter.listenUsingRfcommWithServiceRecord(
+                    "FlagFuryServer_$team",
+                    serverUuid
+                )
                 serverSockets[team] = serverSocket
 
                 while (isServerActive) {
@@ -117,7 +120,8 @@ class BluetoothRepository {
     private val discoveryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == BluetoothDevice.ACTION_FOUND) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val device =
+                    intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 device?.let { discoveryCallback(it) }
             }
         }

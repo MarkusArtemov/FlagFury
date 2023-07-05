@@ -1,6 +1,5 @@
 package de.hsfl.PixelPioneers.FlagFury
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
 import android.widget.Toast
@@ -9,24 +8,28 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.lokibt.bluetooth.BluetoothDevice
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import org.json.JSONArray
 import org.json.JSONObject
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
+
     private val apiRepository = ApiRepository.getInstance(app)
 
     private val bluetoothRepository = BluetoothRepository.getInstance().apply {
-            discoveryCallback = {device ->
-                val updatedMap = _discoveredDevices.value ?: hashMapOf()
-                updatedMap[device.address] = device
-                _discoveredDevices.postValue(updatedMap)
-            }
+        discoveryCallback = { device ->
+            val updatedMap = _discoveredDevices.value ?: hashMapOf()
+            updatedMap[device.address] = device
+            _discoveredDevices.postValue(updatedMap)
         }
+    }
 
-    private val _isDefended = MutableLiveData<Boolean>(false)
+
+    private val _state = MutableLiveData<String>()
+    val state: LiveData<String>
+        get() = _state
+
+    private val _isDefended = MutableLiveData(false)
     val isDefended: LiveData<Boolean>
         get() = _isDefended
 
@@ -59,8 +62,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val team: LiveData<Int>
         get() = _team
 
-    private val _players = MutableLiveData<JSONObject>()
-    val players: LiveData<JSONObject>
+    private val _players = MutableLiveData<List<JSONObject>>()
+    val players: LiveData<List<JSONObject>>
         get() = _players
 
     private val _currentPosition = MutableLiveData<Pair<Double, Double>>()
@@ -79,7 +82,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val messageObserver = Observer<String> { message ->
         currentToast?.cancel()
-        Log.d("MainviewModel",message)
+        Log.d("MainviewModel", message)
         currentToast?.show()
     }
 
@@ -129,25 +132,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun connectToServer(serverDevice: BluetoothDevice, team: String) {
-        bluetoothRepository.connectToServer(serverDevice, team,
-            { defended ->
-                val message = if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
-                _isDefended.postValue(defended)
-                _lastMessage.postValue(message)
-            },
-            { error ->
-                _lastErrorMessage.postValue(Error(error))
-            }
-        )
+        bluetoothRepository.connectToServer(serverDevice, team, { defended ->
+            val message =
+                if (defended) "Eroberungspunkt wird verteidigt" else "Eroberungspunkt ist angreifbar"
+            _isDefended.postValue(defended)
+            _lastMessage.postValue(message)
+        }, { error ->
+            _lastErrorMessage.postValue(Error(error))
+        })
     }
 
-    fun setOldConquerPointTeamValue(team : String){
+    fun setOldConquerPointTeamValue(team: String) {
         _oldConquerPointTeam.value = team
     }
 
     fun startServer() {
         val team = if (_team.value == 1) "rot" else "blau"
-        bluetoothRepository.startServer(team
+        bluetoothRepository.startServer(
+            team
         ) { error ->
             _lastErrorMessage.postValue(Error(error.message))
         }
@@ -166,6 +168,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _currentPosition.value = currentPosition
     }
 
+    private fun showErrorToast(error: String) {
+        Toast.makeText(getApplication(), error, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun jsonArrayToList(jsonArray: JSONArray): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            list.add(jsonObject)
+        }
+        return list
+    }
+
+    fun cancelAllRequests() {
+        apiRepository.cancelAllRequests()
+    }
 
     fun registerGame(
         name: String,
@@ -173,88 +191,84 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (gameId: String, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.registerGame(name, points,
-            { gameId, token ->
+        apiRepository.registerGame(
+            name, points, { gameId, token ->
                 setGameId(gameId)
                 setToken(token)
                 callback(gameId, token)
-            },
-            errorCallback
+            }, errorCallback
         )
     }
 
     fun joinGame(
         gameId: String,
         name: String,
+        team: Int,
         callback: (team: Int, token: String) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.joinGame(gameId, name,
-            { team, token ->
+        apiRepository.joinGame(
+            gameId, name, team, { team1, token ->
                 callback(team, token)
-            },
-            errorCallback
+            }, errorCallback
         )
     }
 
-    fun getPlayers(
-        gameId: String?,
-        name: String?,
-        token: String?,
-        callback: (players: JSONObject?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.getPlayers(gameId, name, token,
-            { players ->
-                callback(players)
-            },
-            errorCallback
-        )
+    fun getPlayers(errorCallback: (error: String?) -> Unit) {
+        apiRepository.getPlayers(gameId.value, name.value, token.value, { players ->
+            players?.let {
+                val playerJSONArray = it.getJSONArray("players")
+                _state.value = it.getString("state")
+                val playerName = name.value
+                val playerTeam: Int?
+                val playersList = jsonArrayToList(playerJSONArray)
+
+                for (i in 0 until playerJSONArray.length()) {
+                    val player = playerJSONArray.getJSONObject(i)
+                    val currentPlayerName = player.getString("name")
+                    val currentPlayerTeam = player.getInt("team")
+
+                    if (player.has("token")) {
+                        val currentPlayerToken = player.getString("token")
+                        Log.d("MainViewModel", "Player token: $currentPlayerToken")
+                    }
+
+                    if (currentPlayerName == playerName) {
+                        playerTeam = currentPlayerTeam
+                        setTeam(playerTeam)
+                        break
+                    }
+                }
+                _players.value = playersList
+            }
+        }, errorCallback)
     }
 
-    fun getPoints(
-        gameId: String?,
-        name: String?,
-        token: String?,
-        callback: (points: List<Point>?, state: String?, game: String?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.getPoints(gameId, name, token,
-            { points, state, game ->
-                callback(points, state, game)
-            },
-            errorCallback
-        )
+
+    fun getPoints(callback: (points: List<Point>?, state: String?) -> Unit) {
+        apiRepository.getPoints(gameId.value, name.value, token.value, { points, state, game ->
+            callback(points, state)
+        }, { error ->
+            error?.let { showErrorToast(it) }
+        })
     }
 
-    fun startGame(
-        game: String?,
-        name: String?,
-        token: String?,
-        callback: (game: String?, state: String?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.startGame(game, name, token,
-            { state, gameId ->
-                callback(state, gameId)
-            },
-            errorCallback
-        )
+    fun startGame() {
+        apiRepository.startGame(
+            gameId.value,
+            name.value,
+            token.value
+        ) { error -> error?.let { showErrorToast(it) } }
     }
 
-    fun endGame(
-        game: String?,
-        name: String?,
-        token: String?,
-        callback: (game: String?, state: String?) -> Unit,
-        errorCallback: (error: String?) -> Unit
-    ) {
-        apiRepository.endGame(game, name, token,
-            { state, gameId ->
-                callback(state, gameId)
-            },
-            errorCallback
-        )
+    fun endGame() {
+        apiRepository.endGame(
+            gameId.value,
+            name.value,
+            token.value
+        ) { error ->
+            error?.let { showErrorToast(it) }
+        }
     }
 
     fun conquerPoint(
@@ -266,11 +280,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (obj: JSONObject?) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.conquerPoint(game, point, team, name, token,
-            { response ->
+        apiRepository.conquerPoint(
+            gameId.value, point, team, name, token, { response ->
                 callback(response)
-            },
-            errorCallback
+            }, errorCallback
         )
     }
 
@@ -281,11 +294,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         callback: (game: String, name: String?) -> Unit,
         errorCallback: (error: String?) -> Unit
     ) {
-        apiRepository.removePlayer(game, name, token,
-            { gameId, playerName ->
-                gameId?.let { callback(it,playerName) }
-            },
-            errorCallback
+        apiRepository.removePlayer(
+            game, name, token, { gameId, playerName ->
+                gameId?.let { callback(it, playerName) }
+            }, errorCallback
         )
     }
+
 }

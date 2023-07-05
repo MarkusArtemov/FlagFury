@@ -1,6 +1,5 @@
 package de.hsfl.PixelPioneers.FlagFury
 
-import android.location.Location
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -17,15 +16,9 @@ import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import com.lokibt.bluetooth.BluetoothDevice
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentGameBinding
-import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
-import kotlin.concurrent.timer
 
 class GameFragment : Fragment() {
     private lateinit var binding: FragmentGameBinding
@@ -69,8 +62,8 @@ class GameFragment : Fragment() {
                 mainViewModel.name.value,
                 mainViewModel.token.value,
                 { game, name ->
-                    mainViewModel.stopServer()
-                    mainViewModel.stopDiscoverDevices()
+                    stopPeriodicUpdate()
+                    mainViewModel.cancelAllRequests()
                     findNavController().navigate(R.id.action_gameFragment_to_homeScreen)
                 },
                 { error ->
@@ -82,24 +75,32 @@ class GameFragment : Fragment() {
     }
 
 
-
-    val timer = object: CountDownTimer(10_000, 1_000) {
+    val timer = object : CountDownTimer(10_000, 1_000) {
         override fun onTick(millisUntilFinished: Long) {
-            if(LocationUtils.checkConquerPoint(currentPoint!!,mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)){
-                    connectToOpponents()
+            if (LocationUtils.checkConquerPoint(
+                    currentPoint!!,
+                    mainViewModel.currentPosition.value!!,
+                    mainViewModel.team.value!!
+                )
+            ) {
+                connectToOpponents()
             }
-                if (
-                !LocationUtils.checkConquerPoint(currentPoint!!, mainViewModel.currentPosition.value!!,mainViewModel.team.value!!)
+            if (
+                !LocationUtils.checkConquerPoint(
+                    currentPoint!!,
+                    mainViewModel.currentPosition.value!!,
+                    mainViewModel.team.value!!
+                )
                 || _isDefended
-                ) {
+            ) {
                 conquerPoint(currentPoint?.id, "${mainViewModel.oldConquerPointTeam.value}")
-                cancel()
                 timerIsRunning = false
+                cancel()
             }
 
         }
 
-        override fun onFinish(){
+        override fun onFinish() {
             timerIsRunning = false
             currentPoint?.let {
                 conquerPoint(it.id, "${mainViewModel.team.value}")
@@ -110,34 +111,8 @@ class GameFragment : Fragment() {
     }
 
 
-        private fun getPlayers() {
-           mainViewModel.getPlayers(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { players ->
-                players?.let {
-                        val playerJSONArray = it.getJSONArray("players")
-                        val playerName = mainViewModel.name.value
-                        val playerTeam: Int?
-
-                        for (i in 0 until playerJSONArray.length()) {
-                            val player = playerJSONArray.getJSONObject(i)
-                            val currentPlayerName = player.getString("name")
-                            val currentPlayerTeam = player.getInt("team")
-
-                            if (currentPlayerName == playerName) {
-                                playerTeam = currentPlayerTeam
-                                mainViewModel.setTeam(playerTeam)
-                                break
-                            }
-                        }
-                }
-            },
-            { error ->
-                error?.let { showErrorToast(it) }
-            }
-        )
+    private fun getPlayers() {
+        mainViewModel.getPlayers { error -> error?.let { showErrorToast(it) } }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -155,7 +130,7 @@ class GameFragment : Fragment() {
     private fun observeLiveData() {
         mainViewModel.isDefended.observe(viewLifecycleOwner) { isDefended ->
             _isDefended = isDefended
-            Log.d("GameFragmet","is defended $_isDefended")
+            Log.d("GameFragmet", "is defended $_isDefended")
         }
 
         mainViewModel.currentPosition.observe(viewLifecycleOwner, Observer {
@@ -168,19 +143,26 @@ class GameFragment : Fragment() {
     private fun handlePositionUpdate(position: Pair<Double, Double>) {
         updateMarkerPosition(position)
 
-        for (point in currentPoints){
-            if (LocationUtils.checkConquerPoint(point, position, mainViewModel.team.value!!) && !timerIsRunning){
+        for (point in currentPoints) {
+            if (LocationUtils.checkConquerPoint(
+                    point,
+                    position,
+                    mainViewModel.team.value!!
+                ) && !timerIsRunning
+            ) {
                 handleConquestPoint(point)
             }
         }
     }
 
     private fun handleConquestPoint(point: Point) {
-        timer.start()
         timerIsRunning = true
-        mainViewModel.setOldConquerPointTeamValue("${point.team}")
+        if (point.team != -1) {
+            mainViewModel.setOldConquerPointTeamValue("${point.team}")
+        }
         conquerPoint(point.id, "-1")
         currentPoint = point
+        timer.start()
     }
 
 
@@ -194,17 +176,9 @@ class GameFragment : Fragment() {
     }
 
     private fun askForConquestPoints(callback: (points: List<Point>) -> Unit) {
-        mainViewModel.getPoints(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { points, state, game ->
-                handleConquestPoints(points, state, game, callback)
-            },
-            { error ->
-                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
-            }
-        )
+        mainViewModel.getPoints { points, state ->
+            handleConquestPoints(points, state, mainViewModel.gameId.value, callback)
+        }
     }
 
     private fun handleConquestPoints(
@@ -236,9 +210,9 @@ class GameFragment : Fragment() {
     private fun handleConquestResult(points: List<Point>?) {
         points?.let {
             if (checkAllPointsSameTeam(points, 1)) {
-                endGame()
+                mainViewModel.endGame()
             } else if (checkAllPointsSameTeam(points, 2)) {
-                endGame()
+                mainViewModel.endGame()
             }
         }
     }
@@ -250,22 +224,6 @@ class GameFragment : Fragment() {
     private fun checkAllPointsSameTeam(points: List<Point>, team: Int): Boolean {
         val filteredPoints = points.filter { it.team == team }
         return filteredPoints.size == points.size
-    }
-
-
-
-    private fun endGame() {
-        mainViewModel.endGame(
-            mainViewModel.gameId.value,
-            mainViewModel.name.value,
-            mainViewModel.token.value,
-            { game,state ->
-                Log.d("Lobby","State changed in Game $game to $state")
-            },
-            { error ->
-                showErrorToast("Fehler beim Abrufen der Eroberungspunkte")
-            }
-        )
     }
 
 
@@ -309,8 +267,8 @@ class GameFragment : Fragment() {
         val devicesMap = mainViewModel.discoveredDevices.value
         val team = if (mainViewModel.team.value == 1) "blau" else "rot"
         if (devicesMap != null) {
-            for(device in devicesMap.values){
-                mainViewModel.connectToServer(device,team)
+            for (device in devicesMap.values) {
+                mainViewModel.connectToServer(device, team)
             }
         }
     }
@@ -325,14 +283,14 @@ class GameFragment : Fragment() {
     }
 
 
-    private fun conquerPoint(id : String?, team: String){
+    private fun conquerPoint(id: String?, team: String) {
         val game = mainViewModel.gameId.value
         val name = mainViewModel.name.value
         val token = mainViewModel.token.value
-        mainViewModel.conquerPoint(game,id,team,name,token,{ response->
-            Log.d("GameFragment","Das bekommen: $response")
+        mainViewModel.conquerPoint(game, id, team, name, token, { response ->
+            Log.d("GameFragment", "Das bekommen: $response")
 
-        },{error->
+        }, { error ->
             error?.let { showErrorToast(it) }
 
         })
@@ -347,12 +305,14 @@ class GameFragment : Fragment() {
         val mapImageWidth = binding.campusCard.width
         val mapImageHeight = binding.campusCard.height
 
-        val markerPosX = LocationUtils.calculateMarkerPosX(markerPosition,mapImageWidth,markerViewWidth)
-        val markerPosY = LocationUtils.calculateMarkerPosY(markerPosition,mapImageHeight,markerViewHeight)
+        val markerPosX =
+            LocationUtils.calculateMarkerPosX(markerPosition, mapImageWidth, markerViewWidth)
+        val markerPosY =
+            LocationUtils.calculateMarkerPosY(markerPosition, mapImageHeight, markerViewHeight)
 
         with(binding.target) {
-            x = markerPosX
-            y = markerPosY
+            x = markerPosX.toFloat()
+            y = markerPosY.toFloat()
         }
     }
 
@@ -392,10 +352,9 @@ class GameFragment : Fragment() {
 
 
     override fun onDestroyView() {
-        mainViewModel.stopServer()
-        mainViewModel.startDiscoverDevices()
-        stopPeriodicUpdate()
         super.onDestroyView()
+        mainViewModel.stopServer()
+        mainViewModel.stopDiscoverDevices()
     }
 
     private fun setViewConstraints(

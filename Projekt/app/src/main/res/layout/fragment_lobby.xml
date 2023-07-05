@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".LobbyFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,14 +13,16 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
-            android:layout_width="248dp"
-            android:layout_height="308dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="80dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewGameId"
-            app:layout_constraintVertical_bias="0.038" />
+            app:layout_constraintVertical_bias="0.038"
+            app:layout_constraintWidth_percent="0.8" />
+
 
         <TextView
             android:id="@+id/textViewGameId"
@@ -39,8 +40,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="202dp"
+            android:backgroundTint="@color/green"
             android:text="Start Game"
-            android:textColor="#00FF00"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
             app:layout_constraintHorizontal_bias="0.58"
@@ -54,8 +56,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="208dp"
             android:layout_marginEnd="56dp"
+            android:backgroundTint="@color/red"
             android:text="Cancel"
-            android:textColor="#FF0000"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/recyclerView"

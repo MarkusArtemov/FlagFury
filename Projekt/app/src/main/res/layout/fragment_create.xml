@@ -45,12 +45,12 @@
             android:id="@+id/target"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="invisible"
             android:src="@android:drawable/ic_menu_mylocation"
-            app:layout_constraintStart_toStartOf="@id/campusCard"
-            app:layout_constraintTop_toTopOf="@id/campusCard"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@id/campusCard"
             app:layout_constraintEnd_toEndOf="@id/campusCard"
-            app:layout_constraintBottom_toBottomOf="@id/campusCard"/>
+            app:layout_constraintStart_toStartOf="@id/campusCard"
+            app:layout_constraintTop_toTopOf="@id/campusCard" />
 
         <Button
             android:id="@+id/buttonFlagPosition"
@@ -68,8 +68,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="56dp"
+            android:backgroundTint="@color/green"
             android:text="Create Game"
-            android:textColor="#00FF00"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonFlagPosition" />
@@ -79,8 +80,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="56dp"
+            android:backgroundTint="@color/red"
             android:text="Cancel"
-            android:textColor="#FF0000"
+            android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonFlagPosition" />

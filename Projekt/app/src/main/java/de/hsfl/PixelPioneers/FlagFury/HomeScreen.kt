@@ -1,24 +1,28 @@
 package de.hsfl.PixelPioneers.FlagFury
 
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.graphics.Color
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateInterpolator
 import android.widget.Button
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import de.hsfl.PixelPioneers.FlagFury.databinding.FragmentHomeScreenBinding
-import kotlin.properties.Delegates
 
 class HomeScreen : Fragment() {
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private lateinit var binding: FragmentHomeScreenBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
-        val navController = findNavController();
+        binding = FragmentHomeScreenBinding.inflate(inflater, container, false)
+        val navController = findNavController()
         val hostButton: Button = binding.hostGame
         val joinGameButton: Button = binding.joinGame
 
@@ -30,5 +34,29 @@ class HomeScreen : Fragment() {
             navController.navigate(R.id.action_homeScreen_to_joinFragment)
         }
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val darkGreyColor = Color.parseColor("#4F4F4F")
+        val whiteColor = Color.WHITE
+        val duration = 5000L
+
+        val backgroundView: View = binding.root
+
+        val colorAnimator = ObjectAnimator.ofObject(
+            backgroundView,
+            "backgroundColor",
+            ArgbEvaluator(),
+            darkGreyColor,
+            whiteColor
+        )
+        colorAnimator.duration = duration
+        colorAnimator.repeatCount = ValueAnimator.INFINITE
+        colorAnimator.repeatMode = ValueAnimator.REVERSE
+        colorAnimator.interpolator = AccelerateInterpolator()
+
+        colorAnimator.start()
     }
 }
